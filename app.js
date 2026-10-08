@@ -24,7 +24,7 @@ function alertCount(){return s.vehicles.filter(v=>(v.next-v.km)<1000).length;}
 function shellHeader(title, subtitle=''){
   return `<header class="topbar">
     <div class="brand-wrap">
-      <img src="assets/brasao_pmms.png" class="crest" alt="Brasão PMMS">
+      <img src="brasao_pmms.png" class="crest" alt="Brasão PMMS">
       <div><div class="brand-small">POLÍCIA MILITAR</div><div class="brand-state">MATO GROSSO DO SUL</div><div class="brand-title">${esc(title)}</div>${subtitle?`<div class="brand-sub">${esc(subtitle)}</div>`:''}</div>
     </div>
     <div class="top-actions"><span class="system-label">CONTROLE DE VIATURAS</span><button class="top-exit" onclick="logout()">Sair</button></div>
@@ -35,7 +35,7 @@ function login(){
  document.body.className='login-body';
  $('app').innerHTML=`<main class="login-screen">
   <div class="login-hero">
-    <img src="assets/brasao_pmms.png" class="login-crest">
+    <img src="brasao_pmms.png" class="login-crest">
     <div><div class="login-brand">POLÍCIA MILITAR</div><div class="login-state">MATO GROSSO DO SUL</div><div class="login-cpa">CPA-7</div><div class="login-cpa-sub">COMANDO DE POLICIAMENTO DA FRONTEIRA BIOCEÂNICA</div></div>
   </div>
   <section class="login-card">
@@ -72,7 +72,7 @@ function renderAdmin(){
  $('app').innerHTML=`${shellHeader('CPA-7','Comando de Policiamento da Fronteira Bioceânica')}
  <div class="admin-layout">
   <aside class="sidebar">
-    <div class="profile"><img src="assets/brasao_pmms.png"><div><b>ADMINISTRADOR</b><span>CPA-7</span></div></div>
+    <div class="profile"><img src="brasao_pmms.png"><div><b>ADMINISTRADOR</b><span>CPA-7</span></div></div>
     <button class="nav active" onclick="dashboard()">⌂ <span>Painel</span></button>
     <button class="nav" onclick="units()">🏢 <span>Unidades</span></button>
     <button class="nav" onclick="vehicles()">🚓 <span>Viaturas</span></button>
@@ -129,7 +129,7 @@ function fleetReport(){
  .foot{margin-top:25px;font-size:10px;color:#68798c}
  @media print{button{display:none}}
  </style></head><body>
- <div class="head"><img src="assets/brasao_pmms.png"><div><div class="title">POLÍCIA MILITAR — MATO GROSSO DO SUL</div><div class="title">CONTROLE DE VIATURAS — CPA-7</div><div class="sub">Relatório geral da frota</div></div></div>
+ <div class="head"><img src="brasao_pmms.png"><div><div class="title">POLÍCIA MILITAR — MATO GROSSO DO SUL</div><div class="title">CONTROLE DE VIATURAS — CPA-7</div><div class="sub">Relatório geral da frota</div></div></div>
  <div class="summary"><div class="box">Unidades<b>${s.units.length}</b></div><div class="box">Viaturas<b>${s.vehicles.length}</b></div><div class="box">Alertas<b>${s.vehicles.filter(v=>v.next-v.km<1000).length}</b></div><div class="box">Vencidas<b>${s.vehicles.filter(v=>v.next-v.km<0).length}</b></div></div>
  <table><thead><tr><th>Unidade</th><th>Prefixo</th><th>Placa</th><th>Veículo</th><th>KM atual</th><th>Próxima troca</th><th>Restante</th><th>Situação</th></tr></thead><tbody>${rows||'<tr><td colspan="8">Nenhuma viatura cadastrada.</td></tr>'}</tbody></table>
  <div class="foot">Emitido em ${now} pelo sistema Controle de Viaturas CPA-7.</div>
@@ -240,7 +240,7 @@ function renderDriver(){
  $('app').innerHTML=`${shellHeader('CPA-7','Área do Motorista')}
  <main class="driver-layout">
   <aside class="driver-side">
-   <img src="assets/brasao_pmms.png" class="driver-crest">
+   <img src="brasao_pmms.png" class="driver-crest">
    <div class="driver-user"><b>${esc(d.name)}</b><span>${esc(d.unit)}</span></div>
    <div class="driver-menu">
     <button class="driver-menu-btn selected" onclick="renderDriver()">🚓 Viaturas</button>
@@ -252,7 +252,7 @@ function renderDriver(){
   <section class="driver-content">
    <div class="driver-page-head"><div><div class="eyebrow">ÁREA DO MOTORISTA</div><h1>Selecione a Viatura</h1><p>Escolha a viatura para registrar KM, óleo ou manutenção.</p></div></div>
    <div class="selector-card"><label>Viatura</label><div class="select-wrap"><span>🚓</span><select id="driverVehicleSelect" onchange="driverSelect(this.value)"><option value="">Escolha uma viatura...</option>${s.vehicles.map(x=>`<option value="${x.id}" ${x.id===selected?'selected':''}>${esc(x.prefix)} — ${esc(x.unit)}${x.plate?' — '+esc(x.plate):''}</option>`).join('')}</select></div></div>
-   ${v?driverVehicle(v):`<div class="empty-driver"><img src="assets/brasao_pmms.png"><h2>Nenhuma viatura selecionada</h2><p>Use a lista acima para escolher uma viatura.</p></div>`}
+   ${v?driverVehicle(v):`<div class="empty-driver"><img src="brasao_pmms.png"><h2>Nenhuma viatura selecionada</h2><p>Use a lista acima para escolher uma viatura.</p></div>`}
   </section>
  </main>`;
 }
@@ -260,7 +260,7 @@ function driverSelect(id){s.session.selectedVehicleId=id;save();renderDriver();}
 function driverVehicle(v){
  const rem=v.next-v.km, state=rem<0?'overdue':rem<1000?'alert':'ok';
  return `<div class="selected-driver-grid">
-  <div class="driver-vehicle-card"><img src="assets/brasao_pmms.png"><div><span>VIATURA SELECIONADA</span><h2>${esc(v.prefix)}</h2><p>${esc(v.unit)} · ${esc(v.model)} · ${esc(v.plate)}</p></div></div>
+  <div class="driver-vehicle-card"><img src="brasao_pmms.png"><div><span>VIATURA SELECIONADA</span><h2>${esc(v.prefix)}</h2><p>${esc(v.unit)} · ${esc(v.model)} · ${esc(v.plate)}</p></div></div>
   <div class="action-card km-card"><div class="action-icon">◉</div><h3>Atualizar KM</h3><span>KM atual</span><strong>${kmfmt(v.km)} km</strong><button class="green" onclick="driverKm('${v.id}')">Registrar KM</button></div>
   <div class="action-card oil-card"><div class="action-icon">🛢</div><h3>Troca de Óleo</h3><span>Próxima troca</span><strong>${kmfmt(v.next)} km</strong><button class="blue" onclick="driverOil('${v.id}')">Registrar troca</button></div>
   <div class="action-card maint-card"><div class="action-icon">🔧</div><h3>Manutenção</h3><span>KM atual</span><strong>${kmfmt(v.km)} km</strong><button class="orange" onclick="driverMaint('${v.id}')">Registrar manutenção</button></div>
