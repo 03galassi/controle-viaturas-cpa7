@@ -181,11 +181,24 @@ function openPdfBytes(bytes){const blob=new Blob([bytes],{type:"application/pdf"
 function generatePdfNow(m){const bytes=buildPdf(buildReportLines(m));openPdfBytes(bytes)}
 function closeMonth(m){if(!closeEligible())return toast("O fechamento mensal pode ser feito a partir do dia 10.");const existing=reportForMonth(m);if(existing){viewArchivedReport(existing.id);return}const bytes=buildPdf(buildReportLines(m));const id=crypto.randomUUID();state.reports.push({id,month:m,closedAt:new Date().toISOString(),pdfBase64:bytesToBase64(bytes)});save();toast("Fechamento mensal arquivado em PDF!");renderClosing();openPdfBytes(bytes)}
 function viewArchivedReport(id){const r=state.reports.find(x=>x.id===id);if(!r)return toast("Relatório não encontrado.");const bytes=base64ToBytes(r.pdfBase64);openPdfBytes(bytes)}
+function openChangePassword(){
+ openModal(`<h2>Alterar senha</h2><form class="form" id="changePasswordForm">
+ <label>Nova senha<input name="password" type="password" minlength="6" required placeholder="Mínimo de 6 caracteres"></label>
+ <label>Confirmar nova senha<input name="confirm" type="password" minlength="6" required placeholder="Repita a senha"></label>
+ <button class="btn primary" type="submit">Salvar nova senha</button></form>`);
+ $("#changePasswordForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const p1=String(f.get("password"));const p2=String(f.get("confirm"));if(p1!==p2)return toast("As senhas não conferem.");const r=await window.paoFirebaseChangePassword(p1);if(r.ok){closeModal();toast(r.msg);}else toast(r.msg);};
+}
+async function paoLogout(){
+ if(!confirm("Deseja sair do aplicativo?")) return;
+ await window.paoFirebaseLogout();
+ location.reload();
+}
 function renderMore(){
  const last=localStorage.getItem("pao_drive_last_backup");
  const connected=localStorage.getItem("pao_drive_connected")==="1";
  $("#content").innerHTML=`<div class="screenTitleRow"><h2 class="screenTitle">Gastos e Relatórios</h2><button class="btn" onclick="navigate('home')">← Voltar</button></div>
  <section class="panel"><div class="moreGrid"><button class="moreCard" onclick="renderCosts()"><span>🧾</span><b>Gastos</b><small>Matéria-prima</small></button><button class="moreCard" onclick="renderClosing()"><span>📅</span><b>Relatórios</b><small>Fechamento mensal e PDF</small></button></div></section>
+ <section class="panel"><h3>🔐 Segurança</h3><p class="muted">Conta: ${esc(window.paoFirebaseGetUser?.()?.email||"")}</p><div class="backupButtons"><button class="btn backupBtn" type="button" onclick="openChangePassword()">🔑<span>Alterar senha</span></button><button class="btn backupBtn" type="button" onclick="paoLogout()">🚪<span>Sair</span></button></div></section>
  <section class="panel drivePanel"><h3>☁️ Backup no Google Drive</h3><p class="muted">Os dados ficam salvos neste aparelho. O Google Drive só é atualizado quando você tocar em “Fazer backup agora”.</p><div id="driveStatus" class="driveStatus">${last?"Último backup: "+new Date(last).toLocaleString("pt-BR"):connected?"Google Drive conectado.":"Google Drive ainda não conectado."}</div><div class="backupButtons"><button class="btn gold backupBtn" type="button" onclick="driveAuth()">☁️<span>Conectar Google Drive</span></button><button class="btn primary backupBtn" type="button" onclick="backupNow()">💾<span>Fazer backup agora</span></button><button class="btn backupBtn" type="button" onclick="restoreNow()">📥<span>Restaurar backup</span></button><button class="btn backupBtn" type="button" onclick="driveDisconnect()">🔌<span>Desconectar Drive</span></button></div></section>`
 }
 function newCost(){
@@ -318,16 +331,70 @@ function charge(cid,total){const c=state.clients.find(x=>x.id===cid);if(!c)retur
 function openRoute(){const selected=deliveryViewDate||todayDate();const list=state.sales.filter(s=>s.date===selected&&!s.delivered).map(s=>state.clients.find(c=>c.id===s.clientId)?.address).filter(Boolean);if(!list.length)return toast("Não há entregas pendentes para a data selecionada.");window.open(maps(list.join(" | ")),"_blank")}
 function updateBadges(){const pending=state.sales.filter(s=>s.date===today()&&!s.delivered).length;const db=$("#deliveryBadge");if(db)db.textContent=pending;const nb=$("#notifyCount");if(nb)nb.textContent=state.sales.filter(s=>s.delivered&&!s.paid).length;const nav=$("#navDueAmount");if(nav)nav.textContent="R$"}
 $("#notifyBtn").onclick=()=>navigate("receivables");
-renderHome();
-updateBottomNav();
-if(window.paoFirebaseStart){
- window.paoFirebaseStart(state, remote=>{
-   Object.keys(state).forEach(k=>delete state[k]);
-   Object.assign(state, {clients:[],sales:[],costs:[],reports:[],receipts:[],credits:[]}, remote||{});
-   localStorage.setItem(KEY,JSON.stringify(state));
-   updateBottomNav();
-   const active=document.querySelector(".bottomNav button.active")?.dataset.screen||"home";
-   navigate(active);
- });
+function showAuthScreen(){
+ const authScreen=document.getElementById("authScreen");
+ const appEl=document.getElementById("app");
+ authScreen?.classList.remove("hidden");
+ appEl?.classList.add("hidden");
+ const email=document.getElementById("loginEmail");
+ if(email && !email.value) email.value="dilmagalassi@gmail.com";
 }
+function hideAuthScreen(){
+ document.getElementById("authScreen")?.classList.add("hidden");
+ document.getElementById("app")?.classList.remove("hidden");
+}
+function setAuthMessage(msg,ok=false){
+ const el=document.getElementById("authMessage");
+ if(el){el.textContent=msg||"";el.className="authMessage "+(ok?"ok":"error");}
+}
+async function initAuth(){
+ showAuthScreen();
+ const auth=window.paoFirebaseGetUser ? window.paoFirebaseGetUser() : null;
+ if(auth){ await enterApp(); return; }
+ const form=document.getElementById("loginForm");
+ const forgot=document.getElementById("forgotPassword");
+ if(form && !form.dataset.bound){
+   form.dataset.bound="1";
+   form.onsubmit=async e=>{
+     e.preventDefault(); setAuthMessage("Entrando...");
+     const result=await window.paoFirebaseLogin(document.getElementById("loginEmail").value,document.getElementById("loginPassword").value);
+     if(result.ok){setAuthMessage("Acesso autorizado.",true);await enterApp();}
+     else setAuthMessage(result.msg);
+   };
+ }
+ if(forgot && !forgot.dataset.bound){
+   forgot.dataset.bound="1";
+   forgot.onclick=async()=>{
+     const email=document.getElementById("loginEmail").value.trim();
+     if(!email) return setAuthMessage("Digite seu e-mail para recuperar a senha.");
+     setAuthMessage("Enviando recuperação...");
+     const result=await window.paoFirebaseResetPassword(email);
+     setAuthMessage(result.msg,result.ok);
+   };
+ }
+ if(window.firebase?.auth){
+   firebase.auth().onAuthStateChanged(async user=>{
+     if(user) await enterApp(); else showAuthScreen();
+   });
+ }
+}
+let appStarted=false;
+async function enterApp(){
+ if(appStarted) return;
+ appStarted=true;
+ hideAuthScreen();
+ renderHome();
+ updateBottomNav();
+ if(window.paoFirebaseStart){
+   await window.paoFirebaseStart(state, remote=>{
+     Object.keys(state).forEach(k=>delete state[k]);
+     Object.assign(state, {clients:[],sales:[],costs:[],reports:[],receipts:[],credits:[]}, remote||{});
+     localStorage.setItem(KEY,JSON.stringify(state));
+     updateBottomNav();
+     const active=document.querySelector(".bottomNav button.active")?.dataset.screen||"home";
+     navigate(active);
+   });
+ }
+}
+initAuth();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});

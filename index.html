@@ -15,7 +15,21 @@
 <link rel="stylesheet" href="./styles.css?v=21">
 </head>
 <body>
-<div id="app">
+<div id="authScreen" class="authScreen hidden">
+  <div class="authCard">
+    <div class="authLogo">🥖</div>
+    <h1>PÃO <span>DA DILMA</span></h1>
+    <p class="authSubtitle">Acesso ao aplicativo</p>
+    <form id="loginForm" class="authForm">
+      <label>E-mail<input id="loginEmail" type="email" autocomplete="username" value="dilmagalassi@gmail.com" required></label>
+      <label>Senha<input id="loginPassword" type="password" autocomplete="current-password" placeholder="Digite sua senha" required></label>
+      <button class="btn primary authSubmit" type="submit">Entrar</button>
+      <button class="authLink" id="forgotPassword" type="button">Esqueci minha senha</button>
+      <div id="authMessage" class="authMessage"></div>
+    </form>
+  </div>
+</div>
+<div id="app" class="hidden">
   <header class="topbar">
     <div class="brand">
       <div class="brandMark">🥖</div>
