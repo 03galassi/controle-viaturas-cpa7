@@ -20,11 +20,7 @@ const monthNow=()=>today().slice(0,7);
 const todayDate=()=>{const d=new Date();const p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`};
 let deliveryViewDate=todayDate();
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-function save(){
- localStorage.setItem(KEY,JSON.stringify(state));
- updateBottomNav();
- if(window.paoFirebaseSave) window.paoFirebaseSave(state);
-}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));updateBottomNav();}
 function receiptTotalFor(cid,month){return state.receipts.filter(r=>r.clientId===cid&&r.month===month).reduce((a,r)=>a+Number(r.amount||0),0)}
 function creditTotalFor(cid){return state.credits.filter(c=>c.clientId===cid).reduce((a,c)=>a+Number(c.amount||0),0)}
 function addCredit(cid,amount){if(!cid||amount<=0)return;state.credits.push({id:crypto.randomUUID(),clientId:cid,amount:Number(amount),date:today()});}
@@ -320,14 +316,4 @@ function updateBadges(){const pending=state.sales.filter(s=>s.date===today()&&!s
 $("#notifyBtn").onclick=()=>navigate("receivables");
 renderHome();
 updateBottomNav();
-if(window.paoFirebaseStart){
- window.paoFirebaseStart(state, remote=>{
-   Object.keys(state).forEach(k=>delete state[k]);
-   Object.assign(state, {clients:[],sales:[],costs:[],reports:[],receipts:[],credits:[]}, remote||{});
-   localStorage.setItem(KEY,JSON.stringify(state));
-   updateBottomNav();
-   const active=document.querySelector(".bottomNav button.active")?.dataset.screen||"home";
-   navigate(active);
- });
-}
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
