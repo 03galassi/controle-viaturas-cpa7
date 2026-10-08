@@ -1,30 +1,31 @@
-
-const KEY='cpa7_offline_v5';
-const defaults={
-  adminEmail:'03galassi@gmail.com',
-  adminPassword:'725120',
-  units:[],
-  vehicles:[],
-  maintenance:[],
-  drivers:[],
-  session:null
-};
+const KEY='cpa7_online_v10';
+const FIREBASE_CONFIG={apiKey:"AIzaSyA2H-sd3gaBArqy6pE1pVcV-1Nz14N-dZE",authDomain:"controle-de-viaturas-cpa-7.firebaseapp.com",projectId:"controle-de-viaturas-cpa-7",storageBucket:"controle-de-viaturas-cpa-7.firebasestorage.app",messagingSenderId:"630650169264",appId:"1:630650169264:web:498aa0a12d48bcb3de9875",measurementId:"G-V4NC72LX2L"};
+const ADMIN_EMAIL='03galassi@gmail.com';
+const defaults={adminEmail:ADMIN_EMAIL,units:[],vehicles:[],maintenance:[],drivers:[],session:null};
 let s=JSON.parse(localStorage.getItem(KEY)||'null')||structuredClone(defaults);
 s.units ||= []; s.vehicles ||= []; s.maintenance ||= []; s.drivers ||= []; s.session ??= null;
-save();
-
-const $ = id => document.getElementById(id);
-const esc = x => String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function save(){localStorage.setItem(KEY,JSON.stringify(s));}
+let firebaseReady=false,stateUnsubscribe=null,booting=true;let auth,db,secondaryApp,secondaryAuth;
+try{firebase.initializeApp(FIREBASE_CONFIG);auth=firebase.auth();db=firebase.firestore();firebaseReady=true;}catch(err){console.error('Firebase initialization error:',err);}
+const $=id=>document.getElementById(id);
+const esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function money(n){return Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
 function kmfmt(n){return Number(n||0).toLocaleString('pt-BR');}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function alertCount(){return s.vehicles.filter(v=>(v.next-v.km)<1000).length;}
+function cleanDrivers(){s.drivers=s.drivers.map(d=>{const x={...d};delete x.password;return x;});}
+function statePayload(){cleanDrivers();return {units:s.units,vehicles:s.vehicles,maintenance:s.maintenance,drivers:s.drivers,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};}
+function save(){localStorage.setItem(KEY,JSON.stringify(s));if(firebaseReady&&auth.currentUser)persistState().catch(console.error);}
+async function persistState(){if(!firebaseReady||!auth.currentUser)return;cleanDrivers();await db.collection('app').doc('state').set(statePayload(),{merge:true});localStorage.setItem(KEY,JSON.stringify(s));}
+async function loadRemote(){const snap=await db.collection('app').doc('state').get();if(snap.exists){const d=snap.data()||{};s.units=Array.isArray(d.units)?d.units:[];s.vehicles=Array.isArray(d.vehicles)?d.vehicles:[];s.maintenance=Array.isArray(d.maintenance)?d.maintenance:[];s.drivers=Array.isArray(d.drivers)?d.drivers:[];cleanDrivers();}else await persistState();localStorage.setItem(KEY,JSON.stringify(s));}
+function subscribeRemote(){if(stateUnsubscribe)stateUnsubscribe();stateUnsubscribe=db.collection('app').doc('state').onSnapshot(snap=>{if(!snap.exists)return;const d=snap.data()||{};s.units=Array.isArray(d.units)?d.units:[];s.vehicles=Array.isArray(d.vehicles)?d.vehicles:[];s.maintenance=Array.isArray(d.maintenance)?d.maintenance:[];s.drivers=Array.isArray(d.drivers)?d.drivers:[];cleanDrivers();localStorage.setItem(KEY,JSON.stringify(s));if(!booting&&s.session)renderCurrent();},console.error);}
+function renderCurrent(){if(s.session?.role==='admin')renderAdmin();else if(s.session?.role==='driver')renderDriver();else login();}
+function ensureSecondaryAuth(){if(!secondaryApp){secondaryApp=firebase.initializeApp(FIREBASE_CONFIG,'secondary');secondaryAuth=secondaryApp.auth();}return secondaryAuth;}
+async function boot(){if(!firebaseReady){booting=false;login();return;}auth.onAuthStateChanged(async user=>{try{if(user){await loadRemote();const email=(user.email||'').toLowerCase();if(email===ADMIN_EMAIL){s.session={role:'admin',uid:user.uid};}else{const d=s.drivers.find(x=>x.uid===user.uid||x.email?.toLowerCase()===email);if(d&&d.active!==false)s.session={role:'driver',driverId:d.id,uid:user.uid,selectedVehicleId:s.session?.selectedVehicleId||''};else{s.session=null;await auth.signOut();alert('Acesso não cadastrado ou inativo.');return;}}localStorage.setItem(KEY,JSON.stringify(s));subscribeRemote();renderCurrent();}else{s.session=null;localStorage.setItem(KEY,JSON.stringify(s));login();}}catch(err){console.error(err);alert('Não foi possível carregar os dados online. Verifique o Firebase e a conexão.');login();}finally{booting=false;}});}boot();
 
 function shellHeader(title, subtitle=''){
   return `<header class="topbar">
     <div class="brand-wrap">
-      <img src="brasao_pmms.png" class="crest" alt="Brasão PMMS">
+      <img src="assets/brasao_pmms.png" class="crest" alt="Brasão PMMS">
       <div><div class="brand-small">POLÍCIA MILITAR</div><div class="brand-state">MATO GROSSO DO SUL</div><div class="brand-title">${esc(title)}</div>${subtitle?`<div class="brand-sub">${esc(subtitle)}</div>`:''}</div>
     </div>
     <div class="top-actions"><span class="system-label">CONTROLE DE VIATURAS</span><button class="top-exit" onclick="logout()">Sair</button></div>
@@ -35,7 +36,7 @@ function login(){
  document.body.className='login-body';
  $('app').innerHTML=`<main class="login-screen">
   <div class="login-hero">
-    <img src="brasao_pmms.png" class="login-crest">
+    <img src="assets/brasao_pmms.png" class="login-crest">
     <div><div class="login-brand">POLÍCIA MILITAR</div><div class="login-state">MATO GROSSO DO SUL</div><div class="login-cpa">CPA-7</div><div class="login-cpa-sub">COMANDO DE POLICIAMENTO DA FRONTEIRA BIOCEÂNICA</div></div>
   </div>
   <section class="login-card">
@@ -50,21 +51,9 @@ function login(){
   </section>
  </main><div class="app-footer driver-footer">Desenvolvido por <strong>ST Galassi</strong></div>`;
 }
-function doLogin(){
- const e=$('email').value.trim().toLowerCase(), p=$('pass').value;
- if(e===s.adminEmail.toLowerCase() && p===s.adminPassword){s.session={role:'admin'};save();renderAdmin();return;}
- const d=s.drivers.find(x=>x.email.toLowerCase()===e && x.password===p && x.active!==false);
- if(d){s.session={role:'driver',driverId:d.id,selectedVehicleId:s.session?.selectedVehicleId||''};save();renderDriver();return;}
- $('msg').innerHTML='<div class="error">E-mail ou senha incorretos.</div>';
-}
-function resetPassword(){
- const e=prompt('Digite o e-mail cadastrado:');
- if(!e)return;
- if(e.trim().toLowerCase()===s.adminEmail.toLowerCase()){alert('Nesta versão offline, a recuperação por e-mail será habilitada quando o sistema for conectado à internet.');return;}
- const d=s.drivers.find(x=>x.email.toLowerCase()===e.trim().toLowerCase());
- alert(d?'Nesta versão offline, a recuperação por e-mail será habilitada quando o sistema for conectado à internet.':'E-mail não encontrado.');
-}
-function logout(){s.session=null;save();login();}
+async function doLogin(){const e=$('email').value.trim().toLowerCase(),p=$('pass').value;if(!firebaseReady){$('msg').innerHTML='<div class="error">Firebase não carregado.</div>';return;}$('msg').innerHTML='<div class="loading">Entrando...</div>';try{await auth.signInWithEmailAndPassword(e,p);}catch(err){console.error(err);$('msg').innerHTML='<div class="error">E-mail ou senha incorretos.</div>';}}
+async function resetPassword(){const e=prompt('Digite o e-mail cadastrado:');if(!e)return;try{await auth.sendPasswordResetEmail(e.trim().toLowerCase());alert('Se o e-mail estiver cadastrado, o link de recuperação foi enviado.');}catch(err){console.error(err);alert('Não foi possível enviar o e-mail de recuperação.');}}
+async function logout(){s.session=null;if(stateUnsubscribe){stateUnsubscribe();stateUnsubscribe=null;}try{if(firebaseReady)await auth.signOut();}catch(err){console.error(err);}login();}
 
 function renderAdmin(){
  document.body.className='';
@@ -72,7 +61,7 @@ function renderAdmin(){
  $('app').innerHTML=`${shellHeader('CPA-7','Comando de Policiamento da Fronteira Bioceânica')}
  <div class="admin-layout">
   <aside class="sidebar">
-    <div class="profile"><img src="brasao_pmms.png"><div><b>ADMINISTRADOR</b><span>CPA-7</span></div></div>
+    <div class="profile"><img src="assets/brasao_pmms.png"><div><b>ADMINISTRADOR</b><span>CPA-7</span></div></div>
     <button class="nav active" onclick="dashboard()">⌂ <span>Painel</span></button>
     <button class="nav" onclick="units()">🏢 <span>Unidades</span></button>
     <button class="nav" onclick="vehicles()">🚓 <span>Viaturas</span></button>
@@ -129,7 +118,7 @@ function fleetReport(){
  .foot{margin-top:25px;font-size:10px;color:#68798c}
  @media print{button{display:none}}
  </style></head><body>
- <div class="head"><img src="brasao_pmms.png"><div><div class="title">POLÍCIA MILITAR — MATO GROSSO DO SUL</div><div class="title">CONTROLE DE VIATURAS — CPA-7</div><div class="sub">Relatório geral da frota</div></div></div>
+ <div class="head"><img src="assets/brasao_pmms.png"><div><div class="title">POLÍCIA MILITAR — MATO GROSSO DO SUL</div><div class="title">CONTROLE DE VIATURAS — CPA-7</div><div class="sub">Relatório geral da frota</div></div></div>
  <div class="summary"><div class="box">Unidades<b>${s.units.length}</b></div><div class="box">Viaturas<b>${s.vehicles.length}</b></div><div class="box">Alertas<b>${s.vehicles.filter(v=>v.next-v.km<1000).length}</b></div><div class="box">Vencidas<b>${s.vehicles.filter(v=>v.next-v.km<0).length}</b></div></div>
  <table><thead><tr><th>Unidade</th><th>Prefixo</th><th>Placa</th><th>Veículo</th><th>KM atual</th><th>Próxima troca</th><th>Restante</th><th>Situação</th></tr></thead><tbody>${rows||'<tr><td colspan="8">Nenhuma viatura cadastrada.</td></tr>'}</tbody></table>
  <div class="foot">Emitido em ${now} pelo sistema Controle de Viaturas CPA-7.</div>
@@ -206,19 +195,7 @@ function drivers(){
  $('content').innerHTML=`<div class="page-head"><div><div class="eyebrow">ACESSOS</div><h1>Motoristas</h1><p>Cadastre e controle os acessos secundários</p></div><button class="primary" onclick="newDriver()">+ Novo motorista</button></div>
  <div class="cards-list">${s.drivers.map((d,i)=>`<div class="list-card driver-row"><div class="driver-info"><div class="avatar">👤</div><div><b>${esc(d.name)}</b><span>${esc(d.email)} · ${esc(d.unit)}</span></div></div><div class="driver-actions-row"><span class="pill ${d.active===false?'off':''}">${d.active===false?'Inativo':'Ativo'}</span><button class="secondary" onclick="editDriver(${i})">Editar</button><button class="danger-btn" onclick="delDriver(${i})">Excluir</button></div></div>`).join('')||'<div class="empty-card">Nenhum motorista cadastrado.</div>'}</div>`;
 }
-function newDriver(existingIndex=null){
- const d=existingIndex===null?null:s.drivers[existingIndex];
- const m=modal(d?'Editar motorista':'Novo motorista',`<form id="driverForm" class="form-grid">
- <label>Nome completo<input name="name" required value="${esc(d?.name||'')}"></label>
- <label>Matrícula<input name="matricula" value="${esc(d?.matricula||'')}"></label>
- <label>E-mail<input name="email" type="email" required value="${esc(d?.email||'')}"></label>
- <label>Unidade<select name="unit" required>${s.units.map(u=>`<option ${d?.unit===u.name?'selected':''}>${esc(u.name)}</option>`).join('')}</select></label>
- <label class="full">Senha ${d?'(deixe vazia para manter)':'inicial'}<input name="password" type="password" placeholder="${d?'Manter atual':'000000'}"></label>
- <label>Status<select name="active"><option value="true" ${d?.active!==false?'selected':''}>Ativo</option><option value="false" ${d?.active===false?'selected':''}>Inativo</option></select></label>
- <div class="modal-actions full"><button type="button" class="secondary" onclick="closeModal()">Cancelar</button><button class="primary" type="submit">Salvar motorista</button></div>
- </form>`);
- $('driverForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),email=f.get('email').trim().toLowerCase();if(s.drivers.some((x,i)=>x.email.toLowerCase()===email&&i!==existingIndex))return alert('Este e-mail já está cadastrado.');const obj={id:d?.id||uid(),name:f.get('name').trim(),matricula:f.get('matricula').trim(),email,unit:f.get('unit'),active:f.get('active')==='true',password:f.get('password')||d?.password||'000000'};if(existingIndex===null)s.drivers.push(obj);else s.drivers[existingIndex]=obj;save();closeModal();drivers();};
-}
+function newDriver(existingIndex=null){const d=existingIndex===null?null:s.drivers[existingIndex];const m=modal(d?'Editar motorista':'Novo motorista',`<form id="driverForm" class="form-grid"><label>Nome completo<input name="name" required value="${esc(d?.name||'')}"></label><label>Matrícula<input name="matricula" value="${esc(d?.matricula||'')}"></label><label>E-mail<input name="email" type="email" required value="${esc(d?.email||'')}" ${d?'disabled':''}></label><label>Unidade<select name="unit" required>${s.units.map(u=>`<option ${d?.unit===u.name?'selected':''}>${esc(u.name)}</option>`).join('')}</select></label>${d?'':'<label class="full">Senha inicial<input name="password" type="password" minlength="6" value="000000" required></label>'}<label>Status<select name="active"><option value="true" ${d?.active!==false?'selected':''}>Ativo</option><option value="false" ${d?.active===false?'selected':''}>Inativo</option></select></label><div class="modal-actions full"><button type="button" class="secondary" onclick="closeModal()">Cancelar</button><button class="primary" type="submit">Salvar motorista</button></div></form>`);$('driverForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),email=(d?.email||f.get('email')).trim().toLowerCase();if(s.drivers.some((x,i)=>x.email?.toLowerCase()===email&&i!==existingIndex))return alert('Este e-mail já está cadastrado.');if(d){d.name=f.get('name').trim();d.matricula=f.get('matricula').trim();d.unit=f.get('unit');d.active=f.get('active')==='true';save();closeModal();drivers();return;}try{const sec=ensureSecondaryAuth();const cred=await sec.createUserWithEmailAndPassword(email,f.get('password')||'000000');s.drivers.push({id:uid(),uid:cred.user.uid,name:f.get('name').trim(),matricula:f.get('matricula').trim(),email,unit:f.get('unit'),active:f.get('active')==='true'});await sec.signOut();await persistState();closeModal();drivers();alert('Motorista cadastrado. Senha inicial: 000000.');}catch(err){console.error(err);alert(err.code==='auth/email-already-in-use'?'Este e-mail já possui uma conta no Firebase.':'Não foi possível cadastrar o motorista.');}};}
 function editDriver(i){newDriver(i)}
 function delDriver(i){if(confirm('Excluir este motorista?')){s.drivers.splice(i,1);save();drivers();}}
 
@@ -228,7 +205,7 @@ function maint(){
  <div class="cards-list">${s.maintenance.slice().reverse().map(m=>{const v=findV(m.vehicle);return `<div class="list-card"><div><b>${esc(v?.prefix||'Viatura removida')}</b><span>${esc(m.type)} · ${esc(m.desc||'')} · KM ${kmfmt(m.km)}</span></div><strong>${esc(m.date)}<br>${money(m.value)}</strong></div>`}).join('')||'<div class="empty-card">Nenhuma manutenção registrada.</div>'}</div>`;
 }
 function backup(){const blob=new Blob([JSON.stringify(s,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup_cpa7_offline.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
-function changeAdminPassword(){const old=prompt('Senha atual:'),np=prompt('Nova senha:');if(old===s.adminPassword&&np){s.adminPassword=np;save();alert('Senha alterada.');}else alert('Não foi possível alterar a senha.');}
+async function changeAdminPassword(){const old=prompt('Senha atual:'),np=prompt('Nova senha:');if(!old||!np)return;try{const user=auth.currentUser;const cred=firebase.auth.EmailAuthProvider.credential(ADMIN_EMAIL,old);await user.reauthenticateWithCredential(cred);await user.updatePassword(np);alert('Senha alterada com sucesso.');}catch(err){console.error(err);alert('Não foi possível alterar a senha. Confira a senha atual.');}}
 
 function renderDriver(){
  document.body.className='driver-body';
@@ -240,7 +217,7 @@ function renderDriver(){
  $('app').innerHTML=`${shellHeader('CPA-7','Área do Motorista')}
  <main class="driver-layout">
   <aside class="driver-side">
-   <img src="brasao_pmms.png" class="driver-crest">
+   <img src="assets/brasao_pmms.png" class="driver-crest">
    <div class="driver-user"><b>${esc(d.name)}</b><span>${esc(d.unit)}</span></div>
    <div class="driver-menu">
     <button class="driver-menu-btn selected" onclick="renderDriver()">🚓 Viaturas</button>
@@ -252,7 +229,7 @@ function renderDriver(){
   <section class="driver-content">
    <div class="driver-page-head"><div><div class="eyebrow">ÁREA DO MOTORISTA</div><h1>Selecione a Viatura</h1><p>Escolha a viatura para registrar KM, óleo ou manutenção.</p></div></div>
    <div class="selector-card"><label>Viatura</label><div class="select-wrap"><span>🚓</span><select id="driverVehicleSelect" onchange="driverSelect(this.value)"><option value="">Escolha uma viatura...</option>${s.vehicles.map(x=>`<option value="${x.id}" ${x.id===selected?'selected':''}>${esc(x.prefix)} — ${esc(x.unit)}${x.plate?' — '+esc(x.plate):''}</option>`).join('')}</select></div></div>
-   ${v?driverVehicle(v):`<div class="empty-driver"><img src="brasao_pmms.png"><h2>Nenhuma viatura selecionada</h2><p>Use a lista acima para escolher uma viatura.</p></div>`}
+   ${v?driverVehicle(v):`<div class="empty-driver"><img src="assets/brasao_pmms.png"><h2>Nenhuma viatura selecionada</h2><p>Use a lista acima para escolher uma viatura.</p></div>`}
   </section>
  </main>`;
 }
@@ -260,7 +237,7 @@ function driverSelect(id){s.session.selectedVehicleId=id;save();renderDriver();}
 function driverVehicle(v){
  const rem=v.next-v.km, state=rem<0?'overdue':rem<1000?'alert':'ok';
  return `<div class="selected-driver-grid">
-  <div class="driver-vehicle-card"><img src="brasao_pmms.png"><div><span>VIATURA SELECIONADA</span><h2>${esc(v.prefix)}</h2><p>${esc(v.unit)} · ${esc(v.model)} · ${esc(v.plate)}</p></div></div>
+  <div class="driver-vehicle-card"><img src="assets/brasao_pmms.png"><div><span>VIATURA SELECIONADA</span><h2>${esc(v.prefix)}</h2><p>${esc(v.unit)} · ${esc(v.model)} · ${esc(v.plate)}</p></div></div>
   <div class="action-card km-card"><div class="action-icon">◉</div><h3>Atualizar KM</h3><span>KM atual</span><strong>${kmfmt(v.km)} km</strong><button class="green" onclick="driverKm('${v.id}')">Registrar KM</button></div>
   <div class="action-card oil-card"><div class="action-icon">🛢</div><h3>Troca de Óleo</h3><span>Próxima troca</span><strong>${kmfmt(v.next)} km</strong><button class="blue" onclick="driverOil('${v.id}')">Registrar troca</button></div>
   <div class="action-card maint-card"><div class="action-icon">🔧</div><h3>Manutenção</h3><span>KM atual</span><strong>${kmfmt(v.km)} km</strong><button class="orange" onclick="driverMaint('${v.id}')">Registrar manutenção</button></div>
@@ -285,41 +262,8 @@ function driverHistory(){
  if(h)h.classList.add('selected');
 }
 
-function editDriverProfile(){
- const d=s.drivers.find(x=>x.id===s.session.driverId);
- if(!d)return;
- modal('Meu cadastro',`<form id="profileForm" class="form-grid">
-  <label>Nome completo<input name="name" required value="${esc(d.name)}"></label>
-  <label>Matrícula<input name="matricula" value="${esc(d.matricula||'')}"></label>
-  <label>E-mail<input name="email" type="email" required value="${esc(d.email)}"></label>
-  <label>Unidade<input value="${esc(d.unit)}" disabled></label>
-  <div class="modal-actions full"><button type="button" class="secondary" onclick="closeModal()">Cancelar</button><button class="primary" type="submit">Salvar cadastro</button></div>
- </form>`);
- $('profileForm').onsubmit=e=>{
-  e.preventDefault();
-  const f=new FormData(e.target), email=f.get('email').trim().toLowerCase();
-  if(s.drivers.some(x=>x.id!==d.id && x.email.toLowerCase()===email)) return alert('Este e-mail já está cadastrado.');
-  d.name=f.get('name').trim(); d.matricula=f.get('matricula').trim(); d.email=email;
-  save(); closeModal(); renderDriver();
- };
-}
-function changeDriverPassword(){
- const d=s.drivers.find(x=>x.id===s.session.driverId);
- if(!d)return;
- modal('Alterar minha senha',`<form id="passwordForm" class="form-grid">
-  <label class="full">Senha atual<input name="old" type="password" required></label>
-  <label>Nova senha<input name="new" type="password" minlength="6" required></label>
-  <label>Confirmar nova senha<input name="confirm" type="password" minlength="6" required></label>
-  <div class="modal-actions full"><button type="button" class="secondary" onclick="closeModal()">Cancelar</button><button class="primary" type="submit">Alterar senha</button></div>
- </form>`);
- $('passwordForm').onsubmit=e=>{
-  e.preventDefault();
-  const f=new FormData(e.target);
-  if(f.get('old')!==d.password) return alert('Senha atual incorreta.');
-  if(f.get('new')!==f.get('confirm')) return alert('As novas senhas não coincidem.');
-  d.password=f.get('new'); save(); closeModal(); alert('Senha alterada com sucesso.');
- };
-}
+function editDriverProfile(){const d=s.drivers.find(x=>x.id===s.session.driverId);if(!d)return;modal('Meu cadastro',`<form id="profileForm" class="form-grid"><label>Nome completo<input name="name" required value="${esc(d.name)}"></label><label>Matrícula<input name="matricula" value="${esc(d.matricula||'')}"></label><label>E-mail<input name="email" type="email" value="${esc(d.email)}" disabled></label><label>Unidade<input value="${esc(d.unit)}" disabled></label><div class="modal-actions full"><button type="button" class="secondary" onclick="closeModal()">Cancelar</button><button class="primary" type="submit">Salvar cadastro</button></div></form>`);$('profileForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);d.name=f.get('name').trim();d.matricula=f.get('matricula').trim();save();closeModal();renderDriver();};}
+async function changeDriverPassword(){const d=s.drivers.find(x=>x.id===s.session.driverId);if(!d)return;modal('Alterar minha senha',`<form id="passwordForm" class="form-grid"><label class="full">Senha atual<input name="old" type="password" required></label><label>Nova senha<input name="new" type="password" minlength="6" required></label><label>Confirmar nova senha<input name="confirm" type="password" minlength="6" required></label><div class="modal-actions full"><button type="button" class="secondary" onclick="closeModal()">Cancelar</button><button class="primary" type="submit">Alterar senha</button></div></form>`);$('passwordForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);if(f.get('new')!==f.get('confirm'))return alert('As novas senhas não coincidem.');try{const user=auth.currentUser;const cred=firebase.auth.EmailAuthProvider.credential(d.email,f.get('old'));await user.reauthenticateWithCredential(cred);await user.updatePassword(f.get('new'));closeModal();alert('Senha alterada com sucesso.');}catch(err){console.error(err);alert('Senha atual incorreta ou não foi possível alterar.');}};}
 
 function currentV(id){return s.vehicles.find(v=>v.id===id);}
 function driverKm(id){const v=currentV(id),n=Number(prompt('Informe o KM atual:',v.km));if(Number.isFinite(n)&&n>=v.km){v.km=n;save();renderDriver();}else alert('Informe um KM válido, igual ou maior que o atual.');}
@@ -332,4 +276,3 @@ function modal(title,html){
 }
 function closeModal(){document.querySelector('.modal-backdrop')?.remove();}
 
-if(s.session?.role==='admin')renderAdmin(); else if(s.session?.role==='driver')renderDriver(); else login();
