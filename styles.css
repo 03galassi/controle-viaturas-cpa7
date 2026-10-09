@@ -28,3 +28,36 @@
 .app-footer{text-align:center;color:#71839a;font-size:11px;padding:20px 0 5px}
 .app-footer strong{color:#0758a9}
 .driver-footer{position:fixed;bottom:8px;right:25px}
+
+
+/* Layout horizontal das viaturas conforme modelo aprovado */
+.vehicle-card.vehicle-row{border:1px solid #dce5ef;border-radius:14px;overflow:visible;margin-bottom:13px;background:#fff;box-shadow:0 3px 12px rgba(15,50,90,.08)}
+.vehicle-card.vehicle-row.alert{border:1px solid #efb34e;background:#fffdf8}
+.vehicle-card.vehicle-row.overdue{border:1px solid #e78b8f;background:#fffafa}
+.vehicle-main.vehicle-main-row{padding:14px 16px;display:grid;grid-template-columns:minmax(250px,1.15fr) minmax(440px,1.7fr) auto;align-items:center;gap:16px}
+.vehicle-title.vehicle-title-row{min-width:0;padding:0;border-right:2px solid #e1e9f2;align-items:center}
+.vehicle-title.vehicle-title-row h3{font-size:25px;font-weight:900;color:#102d50;margin:0 0 7px;letter-spacing:.2px}
+.vehicle-title.vehicle-title-row span{display:block;color:#294664;font-size:15px;line-height:1.35}
+.vehicle-title.vehicle-title-row small{display:block;color:#657c95;font-size:12px;margin-top:5px;font-weight:700}
+.vehicle-metrics.vehicle-metrics-row{display:grid;grid-template-columns:repeat(3,minmax(115px,1fr));gap:10px;margin:0}
+.vehicle-metrics.vehicle-metrics-row>div{min-width:0;min-height:74px;padding:10px 12px;background:#f2f6fb;border:1px solid #edf2f8;border-radius:11px;display:flex;flex-direction:column;justify-content:center}
+.vehicle-metrics.vehicle-metrics-row span{display:flex;align-items:center;gap:7px;color:#5d7390;font-size:13px;white-space:nowrap}
+.vehicle-metrics.vehicle-metrics-row strong{font-size:22px;font-weight:900;color:#102d50;white-space:nowrap}
+.metric-icon{font-size:20px;font-style:normal;color:#0878d1;font-weight:900}
+.vehicle-status-box.ok span{color:#54728d}
+.vehicle-status-box.ok strong{color:#102d50}
+.vehicle-status-box.alert strong{color:#c77700}
+.vehicle-status-box.overdue strong{color:#c51d2a}
+.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:0 0 10px;background:#16a765;box-shadow:0 0 0 3px #d7f5e4}
+.status-dot.alert{background:#f0a000;box-shadow:0 0 0 3px #fff0c4}
+.status-dot.overdue{background:#dc202b;box-shadow:0 0 0 3px #ffdfe1}
+.vehicle-actions.vehicle-actions-row{display:flex;align-items:stretch;gap:8px;flex-wrap:nowrap}
+.vehicle-actions.vehicle-actions-row button{min-height:64px;padding:10px 14px;border-radius:10px;font-weight:800;font-size:14px;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:8px}
+.vehicle-actions.vehicle-actions-row .secondary{background:#7189a2;color:#fff}
+.vehicle-actions.vehicle-actions-row .primary{background:#087bd9;color:#fff}
+.vehicle-actions.vehicle-actions-row .orange{background:#f07800;color:#fff}
+.vehicle-actions.vehicle-actions-row .danger-btn{background:#fff0f1;color:#c51d2a}
+.btn-icon{font-size:23px;line-height:1;font-weight:900}
+@media(max-width:1450px){.vehicle-main.vehicle-main-row{grid-template-columns:minmax(190px,.9fr) minmax(360px,1.2fr);gap:12px}.vehicle-actions.vehicle-actions-row{grid-column:1/-1;justify-content:flex-end}.vehicle-actions.vehicle-actions-row button{min-height:48px}}
+@media(max-width:900px){.vehicle-main.vehicle-main-row{grid-template-columns:1fr;padding:14px;gap:12px}.vehicle-title.vehicle-title-row{border-right:0;border-bottom:1px solid #e1e9f2;padding-bottom:10px}.vehicle-metrics.vehicle-metrics-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.vehicle-metrics.vehicle-metrics-row>div{padding:9px 7px;min-height:68px}.vehicle-metrics.vehicle-metrics-row span{font-size:11px;white-space:normal}.vehicle-metrics.vehicle-metrics-row strong{font-size:16px;white-space:normal;overflow-wrap:anywhere}.vehicle-actions.vehicle-actions-row{grid-column:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.vehicle-actions.vehicle-actions-row button{font-size:12px;padding:10px 8px;min-height:48px;white-space:normal}.btn-icon{font-size:19px}}
+@media(max-width:420px){.vehicle-metrics.vehicle-metrics-row{grid-template-columns:1fr}.vehicle-metrics.vehicle-metrics-row>div{min-height:58px}.vehicle-metrics.vehicle-metrics-row strong{font-size:19px}}

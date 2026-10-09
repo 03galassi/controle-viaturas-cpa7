@@ -156,12 +156,23 @@ function vehicleCards(arr){
  if(!arr.length)return '<div class="empty-card">Nenhuma viatura encontrada.</div>';
  return arr.map(v=>{
   const rem=v.next-v.km, state=rem<0?'overdue':rem<1000?'alert':'ok';
-  return `<article class="vehicle-card ${state}">
-   ${rem<1000?`<div class="big-beacon ${rem<0?'red':''}"><i></i><span>ALERTA</span></div>`:''}
-   <div class="vehicle-main"><div class="vehicle-title"><div><h3>${esc(v.prefix)}</h3><span>${esc(v.plate)} · ${esc(v.brand)} ${esc(v.model)}</span></div><b>${esc(v.unit)}</b></div>
-   <div class="vehicle-metrics"><div><span>KM atual</span><strong>${kmfmt(v.km)}</strong></div><div><span>Próxima troca</span><strong>${kmfmt(v.next)}</strong></div><div><span>Intervalo</span><strong>${kmfmt(v.interval)} km</strong></div><div><span>Situação</span><strong class="${state}">${state==='ok'?'OK':state==='alert'?(rem<0?'VENCIDA':`FALTAM ${kmfmt(rem)} km`):`VENCIDA ${kmfmt(Math.abs(rem))} km`}</strong></div></div>
-   <div class="vehicle-actions"><button class="secondary" onclick="kmAdmin('${v.id}')">Atualizar KM</button><button class="primary" onclick="oilAdmin('${v.id}')">Troca de óleo</button><button class="orange" onclick="maintenanceAdmin('${v.id}')">Manutenção</button><button class="danger-btn" onclick="editVehicle('${v.id}')">Editar</button></div>
-   </div></article>`;
+  const status=state==='ok'?'OK':state==='alert'?(rem<0?'VENCIDA':`FALTAM ${kmfmt(rem)} km`):`VENCIDA ${kmfmt(Math.abs(rem))} km`;
+  return `<article class="vehicle-card vehicle-row ${state}">
+   <div class="vehicle-main vehicle-main-row">
+    <div class="vehicle-title vehicle-title-row"><div><h3>${esc(v.prefix)}</h3><span>${esc(v.brand)} ${esc(v.model)}${v.plate?' · '+esc(v.plate):''}</span><small>${esc(v.unit)}</small></div></div>
+    <div class="vehicle-metrics vehicle-metrics-row">
+     <div><span><i class="metric-icon speed-icon">◴</i> KM atual</span><strong>${kmfmt(v.km)}</strong></div>
+     <div><span><i class="metric-icon wrench-icon">🔧</i> Próxima troca</span><strong>${kmfmt(v.next)}</strong></div>
+     <div class="vehicle-status-box ${state}"><span><i class="status-dot ${state}"></i> Situação</span><strong class="${state}">${status}</strong></div>
+    </div>
+    <div class="vehicle-actions vehicle-actions-row">
+     <button class="secondary" onclick="kmAdmin('${v.id}')"><span class="btn-icon">⟳</span> Atualizar KM</button>
+     <button class="primary" onclick="oilAdmin('${v.id}')"><span class="btn-icon">💧</span> Troca de óleo</button>
+     <button class="orange" onclick="maintenanceAdmin('${v.id}')"><span class="btn-icon">⚙</span> Manutenção</button>
+     <button class="danger-btn" onclick="editVehicle('${v.id}')"><span class="btn-icon">✎</span> Editar</button>
+    </div>
+   </div>
+  </article>`;
  }).join('');
 }
 function newVehicle(editId=null){
