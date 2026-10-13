@@ -64,7 +64,7 @@ function renderAdmin(){
     <div class="profile"><img src="assets/brasao_pmms.png"><div><b>ADMINISTRADOR</b><span>CPA-7</span></div></div>
     <button class="nav active" onclick="dashboard()">⌂ <span>Painel</span></button>
     <button class="nav" onclick="units()">🏢 <span>Unidades</span></button>
-    <button class="nav" onclick="vehicles()">🚓 <span>Viaturas</span></button>
+    <button class="nav" onclick="window.vehicles()">🚓 <span>Viaturas</span></button>
     <button class="nav" onclick="drivers()">👨‍✈️ <span>Motoristas</span></button>
     <button class="nav" onclick="maint()">🔧 <span>Manutenções</span></button>
     <button class="nav" onclick="backup()">💾 <span>Backup</span></button>
@@ -146,6 +146,7 @@ function vehicles(encodedUnit=''){
  <div class="toolbar"><input id="searchVehicle" placeholder="Pesquisar prefixo, placa, modelo ou unidade..." oninput="filterVehicles('${encodeURIComponent(unit)}')"><select id="unitFilter" onchange="filterVehicles('${encodeURIComponent(unit)}')"><option value="">Todas as unidades</option>${s.units.map(u=>`<option ${u.name===unit?'selected':''}>${esc(u.name)}</option>`).join('')}</select></div>
  <div id="vehicleList">${vehicleCards(s.vehicles.filter(v=>!unit||v.unit===unit))}</div>`;
 }
+window.vehicles = vehicles;
 function filterVehicles(encodedUnit=''){
  const base=encodedUnit?decodeURIComponent(encodedUnit):'';
  const q=($('searchVehicle')?.value||'').toLowerCase();
