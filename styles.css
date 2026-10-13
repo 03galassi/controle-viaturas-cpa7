@@ -126,3 +126,12 @@ button.stat{cursor:pointer}button.stat:hover{border-color:#9cc3ea}
 .vehicle-metrics.vehicle-metrics-row .vehicle-status-box strong{white-space:normal;font-size:18px;line-height:1.15}
 @media(max-width:900px){.vehicle-metrics.vehicle-metrics-row .vehicle-status-box strong{font-size:14px}}
 @media(max-width:420px){.vehicle-metrics.vehicle-metrics-row{grid-template-columns:repeat(3,minmax(0,1fr))}.vehicle-metrics.vehicle-metrics-row>div{min-height:60px;padding:8px 7px}.vehicle-metrics.vehicle-metrics-row strong{font-size:15px}.vehicle-metrics.vehicle-metrics-row .metric-icon{display:none}}
+
+/* ===== Escala da interface (computador) — altere --escala para ajustar ===== */
+:root{--escala:.6}
+@media(min-width:901px){
+ html{zoom:var(--escala)}
+ .admin-layout,.driver-layout{min-height:calc(100vh / var(--escala) - 118px)}
+ .login-screen{min-height:calc(100vh / var(--escala))}
+ .modal{max-height:calc(92vh / var(--escala))}
+}

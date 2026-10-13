@@ -10,6 +10,9 @@ Desenvolvido por **ST Galassi**.
 
 Os dados ficam no Firebase (documento `app/state`), no mesmo formato da versão anterior.
 
+## v12
+- Interface no computador reduzida para 60% (variável `--escala` no fim do styles.css).
+
 ## v11 — correções
 - Botão **Viaturas** voltava sozinho para o Painel a cada sincronização do Firebase. Agora a tela atual é mantida.
 - Menu inexistente no celular/tablet: criado menu inferior para administrador e motorista.
