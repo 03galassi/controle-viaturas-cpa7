@@ -104,11 +104,43 @@ const findUnit = id => s.units.find(u => u.id === id);
 const me = () => s.drivers.find(x => x.id === s.session?.driverId);
 function vstate(v){
   const rem = v.next - v.km;
-  if (rem < 0) return {rem, key:'overdue', label:`VENCIDA ${kmfmt(-rem)} km`};
-  if (rem < ALERT_KM) return {rem, key:'alert', label:`FALTAM ${kmfmt(rem)} km`};
-  return {rem, key:'ok', label:'OK'};
+  if (rem < 0) return {rem, key:'overdue', label:`Vencida há ${kmfmt(-rem)} km`};
+  if (rem < ALERT_KM) return {rem, key:'alert', label:`Faltam ${kmfmt(rem)} km`};
+  return {rem, key:'ok', label:'Em dia'};
 }
 const sortV = arr => arr.slice().sort((a,b) => String(a.unit).localeCompare(String(b.unit),'pt-BR') || String(a.prefix).localeCompare(String(b.prefix),'pt-BR',{numeric:true}));
+
+/* ---------- Ícones (SVG embutido) ---------- */
+const ICONS = {
+  home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  building:'<path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16"/><path d="M14 10h5a1 1 0 0 1 1 1v10M8 8h2M8 12h2M8 16h2M2 21h20"/>',
+  car:'<path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><path d="M3 11h18v6a1 1 0 0 1-1 1h-1v1.5h-3V18H8v1.5H5V18H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="14.5" r=".7"/><circle cx="16.5" cy="14.5" r=".7"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  sync:'<path d="M21 12a9 9 0 0 1-15.5 6.2L3 16M3 12A9 9 0 0 1 18.5 5.8L21 8M21 3v5h-5M3 21v-5h5"/>',
+  download:'<path d="M12 3v12m0 0-4-4m4 4 4-4M4 20h16"/>',
+  lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  logout:'<path d="M9 21H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h4M16 17l5-5-5-5M21 12H9"/>',
+  gauge:'<path d="M12 14l4-4"/><path d="M3.3 17a9 9 0 1 1 17.4 0"/>',
+  drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+  edit:'<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+  alert:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17.5v.01"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16 9.5"/>',
+  menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
+  clipboard:'<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h6"/>',
+  arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+};
+const ic = (n, c = '') => `<svg class="ic ${c}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+function meterHtml(v, caption = true){
+  const st = vstate(v), driven = Math.max(0, v.km - v.last), pct = Math.min(100, Math.round(driven / (v.interval || 5000) * 100));
+  return `<div class="meter ${st.key}" role="img" aria-label="${pct}% do intervalo de troca percorrido"><i style="width:${pct}%"></i></div>${caption ? `<div class="meter-cap"><span>${kmfmt(driven)} km desde a última troca</span><span>${v.oilDate ? 'Última troca: ' + esc(fmtDate(v.oilDate)) : 'Intervalo: ' + kmfmt(v.interval) + ' km'}</span></div>` : ''}`;
+}
+const chip = st => `<span class="chip ${st.key}">${st.label}</span>`;
+const initials = n => String(n || '?').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
 
 function toast(msg, type='ok'){
   let box = $('toasts');
@@ -192,29 +224,33 @@ async function boot(){
 function login(msg=''){
   document.body.className = 'login-body';
   $('app').innerHTML = `<main class="login-screen">
-  <div class="login-hero">
+  <section class="login-hero">
     <img src="${CREST}" class="login-crest" alt="Brasão PMMS">
-    <div><div class="login-brand">POLÍCIA MILITAR</div><div class="login-state">MATO GROSSO DO SUL</div><div class="login-cpa">CPA-7</div><div class="login-cpa-sub">COMANDO DE POLICIAMENTO DA FRONTEIRA BIOCEÂNICA</div></div>
-  </div>
+    <div><h2>CPA-7</h2><p>Comando de Policiamento da Fronteira Bioceânica</p></div>
+    <small>Polícia Militar de Mato Grosso do Sul</small>
+  </section>
+  <section class="login-panel">
   <form class="login-card" id="loginForm" novalidate>
     <h1>Controle de Viaturas</h1>
-    <p>Acesso ao sistema</p>
+    <p class="sub">Entre com seu e-mail e senha.</p>
     <label>E-mail<input id="email" type="email" autocomplete="username" inputmode="email" required></label>
-    <label>Senha<input id="pass" type="password" autocomplete="current-password" required></label>
-    <button class="primary wide" id="loginBtn" type="submit">ENTRAR</button>
+    <label>Senha<span class="pass-wrap"><input id="pass" type="password" autocomplete="current-password" required><button type="button" onclick="togglePass()" aria-label="Mostrar ou ocultar a senha">${ic('eye')}</button></span></label>
+    <button class="primary wide" id="loginBtn" type="submit">Entrar</button>
     <button class="text-button" type="button" onclick="resetPassword()">Esqueci minha senha</button>
     <div id="msg">${msg ? `<div class="error">${esc(msg)}</div>` : ''}</div>
     <div class="developer-credit">Desenvolvido por <strong>ST Galassi</strong></div>
   </form>
+  </section>
  </main>`;
   $('loginForm').onsubmit = e => { e.preventDefault(); doLogin(); };
 }
+function togglePass(){ const i = $('pass'); if (i) i.type = i.type === 'password' ? 'text' : 'password'; }
 async function doLogin(){
   const e = $('email').value.trim().toLowerCase(), p = $('pass').value;
   if (!firebaseReady) { $('msg').innerHTML = '<div class="error">Sistema online não carregado. Verifique a internet.</div>'; return; }
   if (!e || !p) { $('msg').innerHTML = '<div class="error">Informe e-mail e senha.</div>'; return; }
   $('loginBtn').disabled = true;
-  $('msg').innerHTML = '<div class="loading">Entrando...</div>';
+  $('msg').innerHTML = '<div class="loading">Entrando…</div>';
   try { await auth.signInWithEmailAndPassword(e, p); }
   catch(err) {
     console.error(err);
@@ -242,53 +278,61 @@ function shellHeader(title, subtitle=''){
   return `<header class="topbar">
     <div class="brand-wrap">
       <img src="${CREST}" class="crest" alt="Brasão PMMS">
-      <div><div class="brand-small">POLÍCIA MILITAR</div><div class="brand-state">MATO GROSSO DO SUL</div><div class="brand-title">${esc(title)}</div>${subtitle ? `<div class="brand-sub">${esc(subtitle)}</div>` : ''}</div>
+      <div class="brand-text"><b>Polícia Militar · Mato Grosso do Sul</b><span>${esc(title)}${subtitle ? ' — ' + esc(subtitle) : ''}</span></div>
     </div>
-    <div class="top-actions"><span class="system-label">CONTROLE DE VIATURAS</span><button class="top-exit" onclick="logout()">Sair</button></div>
+    <div class="top-actions"><span class="system-label">Controle de Viaturas</span><button class="top-exit" onclick="logout()" aria-label="Sair">${ic('logout')}<span>Sair</span></button></div>
   </header>`;
 }
 
 /* ---------- Administrador ---------- */
 function adminShell(){
   document.body.className = 'admin-body';
-  const items = [['dashboard','⌂','Painel'],['units','🏢','Unidades'],['vehicles','🚓','Viaturas'],['drivers','👮','Motoristas'],['maint','🔧','Manutenções'],['tcard','🔄','Integração TCard']];
+  const items = [['dashboard','home','Painel'],['units','building','Unidades'],['vehicles','car','Viaturas'],['drivers','users','Motoristas'],['maint','wrench','Manutenções'],['tcard','sync','TCard']];
   $('app').innerHTML = `${shellHeader('CPA-7','Comando de Policiamento da Fronteira Bioceânica')}
  <div class="admin-layout">
   <aside class="sidebar">
-    <div class="profile"><img src="${CREST}" alt=""><div><b>ADMINISTRADOR</b><span>CPA-7</span></div></div>
-    ${items.map(([p,i,l]) => `<button class="nav" data-page="${p}" onclick="go('${p}')">${i} <span>${l}</span></button>`).join('')}
-    <button class="nav" onclick="backup()">💾 <span>Backup</span></button>
-    <button class="nav bottom" onclick="changeAdminPassword()">🔒 <span>Minha senha</span></button>
+    <div class="profile"><span class="avatar">${ic('user')}</span><div><b>Administrador</b><span>CPA-7</span></div></div>
+    ${items.map(([p,i,l]) => `<button class="nav" data-page="${p}" onclick="go('${p}')">${ic(i)}<span>${l}</span></button>`).join('')}
+    <div class="nav-sep"></div>
+    <button class="nav" onclick="backup()">${ic('download')}<span>Backup</span></button>
+    <button class="nav bottom" onclick="changeAdminPassword()">${ic('lock')}<span>Minha senha</span></button>
   </aside>
   <main class="main-content"><div id="content"></div><div class="app-footer">Desenvolvido por <strong>ST Galassi</strong></div></main>
  </div>
- <nav class="mobile-nav">${items.map(([p,i,l]) => `<button data-page="${p}" onclick="go('${p}')"><i>${i}</i><span>${l}</span></button>`).join('')}<button onclick="adminMore()"><i>☰</i><span>Mais</span></button></nav>`;
+ <nav class="mobile-nav">${items.map(([p,i,l]) => `<button data-page="${p}" onclick="go('${p}')">${ic(i)}<span>${l}</span></button>`).join('')}<button onclick="adminMore()">${ic('menu')}<span>Mais</span></button></nav>`;
 }
 function adminMore(){
-  modal('Mais opções', `<div class="form-grid"><button class="secondary full" onclick="closeModal();backup()">💾 Baixar backup dos dados</button><button class="secondary full" onclick="closeModal();fleetReport()">📄 Emitir relatório da frota</button><button class="secondary full" onclick="changeAdminPassword()">🔒 Alterar minha senha</button><button class="danger-btn full" onclick="logout()">Sair do sistema</button></div>`);
+  modal('Mais opções', `<div class="form-grid"><button class="secondary full" onclick="closeModal();backup()">${ic('download')} Baixar backup dos dados</button><button class="secondary full" onclick="closeModal();fleetReport()">${ic('file')} Emitir relatório da frota</button><button class="secondary full" onclick="changeAdminPassword()">${ic('lock')} Alterar minha senha</button><button class="danger-btn full" onclick="logout()">${ic('logout')} Sair do sistema</button></div>`);
 }
 
 function dashboard(){
   const alerts = sortV(s.vehicles.filter(v => vstate(v).key !== 'ok')).sort((a,b) => (a.next-a.km) - (b.next-b.km));
-  const overdue = alerts.filter(v => vstate(v).key === 'overdue');
-  $('content').innerHTML = `<div class="page-head"><div><div class="eyebrow">PAINEL ADMINISTRATIVO</div><h1>Controle de Viaturas</h1><p>Visão geral da frota do CPA-7</p></div><div class="head-actions"><button class="secondary" onclick="fleetReport()">📄 Relatório da frota</button><button class="primary" onclick="vehicleForm()">+ Nova viatura</button></div></div>
+  const overdue = alerts.filter(v => vstate(v).key === 'overdue'), nAlert = alerts.length - overdue.length;
+  const total = s.vehicles.length, nOk = total - alerts.length, pc = n => total ? (n / total * 100).toFixed(2) : 0;
+  const dateTxt = new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'});
+  $('content').innerHTML = `<div class="page-head"><div><h1>Painel</h1><p>${esc(dateTxt.charAt(0).toUpperCase() + dateTxt.slice(1))} · visão geral da frota do CPA-7</p></div><div class="head-actions"><button class="secondary" onclick="fleetReport()">${ic('file')} Relatório da frota</button><button class="primary" onclick="vehicleForm()">${ic('plus')} Nova viatura</button></div></div>
  <div class="stats">
-  <button class="stat" onclick="go('units')"><span>Unidades</span><strong>${s.units.length}</strong></button>
-  <button class="stat" onclick="ui.vehUnit='';ui.vehQuery='';go('vehicles')"><span>Viaturas</span><strong>${s.vehicles.length}</strong></button>
-  <div class="stat alert-stat"><span>Alertas</span><strong>${alerts.length - overdue.length}</strong></div>
-  <div class="stat danger-stat"><span>Vencidas</span><strong>${overdue.length}</strong></div>
+  <button class="stat" onclick="go('units')"><span class="stat-ico">${ic('building')}</span><div><span>Unidades</span><strong>${s.units.length}</strong></div></button>
+  <button class="stat" onclick="ui.vehUnit='';ui.vehQuery='';go('vehicles')"><span class="stat-ico green">${ic('car')}</span><div><span>Viaturas</span><strong>${total}</strong></div></button>
+  <div class="stat"><span class="stat-ico amber">${ic('alert')}</span><div><span>Em alerta</span><strong>${nAlert}</strong></div></div>
+  <div class="stat"><span class="stat-ico red">${ic('drop')}</span><div><span>Troca vencida</span><strong>${overdue.length}</strong></div></div>
  </div>
- <div class="section-title"><h2>Viaturas por unidade</h2><button class="secondary" onclick="go('units')">Gerenciar unidades</button></div>
- <div class="unit-grid">${s.units.map(u => {
-   const vs = s.vehicles.filter(v => v.unit === u.name), ac = vs.filter(v => vstate(v).key !== 'ok').length;
-   return `<article class="unit-card"><div><h3>${esc(u.name)}</h3><span>${vs.length} viatura(s)</span></div><b class="${ac ? 'unit-alert' : ''}">${ac ? `🚨 ${ac} alerta(s)` : '🟢 OK'}</b><button onclick="openUnitVehicles('${u.id}')">Ver viaturas →</button></article>`;
- }).join('') || '<div class="empty-card">Cadastre uma unidade para começar. <br><br><button class="primary" onclick="unitForm()">+ Nova unidade</button></div>'}</div>
- <div class="section-title"><h2>Alertas de troca de óleo</h2></div>
- <div class="alert-list">${alerts.map(vehicleMini).join('') || '<div class="empty-card">Nenhuma viatura em alerta.</div>'}</div>`;
+ <div class="health"><div class="health-top"><h2>Situação da troca de óleo</h2><span>${total ? Math.round(nOk / total * 100) : 0}% da frota em dia</span></div>
+  <div class="seg" role="img" aria-label="${nOk} em dia, ${nAlert} em alerta, ${overdue.length} vencidas">${total ? `<i class="s-ok" style="width:${pc(nOk)}%"></i><i class="s-alert" style="width:${pc(nAlert)}%"></i><i class="s-overdue" style="width:${pc(overdue.length)}%"></i>` : ''}</div>
+  <div class="legend"><span><i class="dot"></i><b>${nOk}</b> em dia</span><span><i class="dot alert"></i><b>${nAlert}</b> em alerta (menos de ${kmfmt(ALERT_KM)} km)</span><span><i class="dot overdue"></i><b>${overdue.length}</b> vencidas</span></div></div>
+ <div class="dash-cols">
+  <section><div class="section-title"><h2>Viaturas por unidade</h2><button class="secondary" onclick="go('units')">Gerenciar</button></div>
+  <div class="unit-grid">${s.units.map(u => {
+    const vs = s.vehicles.filter(v => v.unit === u.name), ac = vs.filter(v => vstate(v).key !== 'ok').length;
+    return `<article class="unit-card"><div><h3>${esc(u.name)}</h3><span>${vs.length} viatura(s)</span></div>${ac ? `<span class="chip alert">${ac} alerta(s)</span>` : '<span class="chip">Em dia</span>'}<button onclick="openUnitVehicles('${u.id}')">Ver ${ic('arrow')}</button></article>`;
+  }).join('') || `<div class="empty-card">Cadastre uma unidade para começar.<br><br><button class="primary" onclick="unitForm()">${ic('plus')} Nova unidade</button></div>`}</div></section>
+  <section><div class="section-title"><h2>Trocas de óleo a fazer</h2></div>
+  <div class="alert-list">${alerts.map(vehicleMini).join('') || '<div class="empty-card">Nenhuma viatura precisa de troca de óleo agora.</div>'}</div></section>
+ </div>`;
 }
 function vehicleMini(v){
   const st = vstate(v);
-  return `<div class="mini-card ${st.key === 'overdue' ? 'overdue' : ''}"><div class="mini-beacon ${st.key === 'overdue' ? 'red' : ''}"></div><div><b>${esc(v.prefix)}</b><span>${esc(v.unit)} · ${esc(v.model)}</span></div><strong>${st.label}</strong><button class="primary" onclick="oilForm('${v.id}')">Registrar troca</button></div>`;
+  return `<div class="mini-card ${st.key === 'overdue' ? 'overdue' : ''}"><div><b>${esc(v.prefix)}</b><span>${esc(v.unit)} · ${esc(v.model)}</span></div>${chip(st)}<button class="primary" onclick="oilForm('${v.id}')">Registrar troca</button></div>`;
 }
 
 async function crestDataUrl(){
@@ -313,18 +357,20 @@ async function fleetReport(){
   const nAlert = list.filter(v => vstate(v).key === 'alert').length, nOver = list.filter(v => vstate(v).key === 'overdue').length;
   const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório da Frota — CPA-7</title>
  <style>
- body{font-family:Arial,sans-serif;color:#132b47;margin:35px}
- .head{display:flex;align-items:center;gap:18px;border-bottom:4px solid #0758a9;padding-bottom:15px}
- img{width:70px;height:80px;object-fit:contain}.title{font-size:22px;font-weight:800}.sub{color:#536b84}
- .summary{display:flex;gap:12px;margin:20px 0;flex-wrap:wrap}.box{border:1px solid #ccd9e7;border-radius:8px;padding:12px 18px;min-width:130px}.box b{display:block;font-size:22px}
- table{width:100%;border-collapse:collapse;margin-top:18px;font-size:11px}th{background:#0758a9;color:#fff;text-align:left}th,td{border:1px solid #cdd8e4;padding:7px}tr:nth-child(even){background:#f3f6f9}
+ *{box-sizing:border-box}body{font-family:"Segoe UI",Arial,sans-serif;color:#0f2038;margin:32px}
+ .head{display:flex;align-items:center;gap:18px;border-bottom:4px solid #0a2342;padding-bottom:14px;position:relative}
+ .head::after{content:"";position:absolute;left:0;bottom:-4px;width:90px;height:4px;background:#0a8f4e}
+ img{width:62px;height:72px;object-fit:contain}.title{font-size:19px;font-weight:800;color:#0a2342}.sub{color:#5a6d85;margin-top:3px}
+ .summary{display:flex;gap:12px;margin:20px 0;flex-wrap:wrap}.box{border:1px solid #dbe3ee;border-radius:10px;padding:10px 18px;min-width:130px;color:#5a6d85;font-size:12px}.box b{display:block;font-size:24px;color:#0f2038}
+ .box.a b{color:#d98200}.box.v b{color:#cc2630}
+ table{width:100%;border-collapse:collapse;margin-top:14px;font-size:11px}th{background:#0a2342;color:#fff;text-align:left;font-weight:600}th,td{border:1px solid #dbe3ee;padding:7px 8px}tr:nth-child(even) td{background:#f5f8fc}
  th,td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
- .ok{color:#08763a;font-weight:800}.alert{color:#b36b00;font-weight:800}.overdue{color:#c21f27;font-weight:800}
- .foot{margin-top:25px;font-size:10px;color:#68798c}.print{margin-top:20px;padding:10px 18px;background:#0758a9;color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer}
- @media print{.print{display:none}body{margin:15mm}}
+ .ok,.alert,.overdue{font-weight:700;text-align:center}.ok{color:#076b3a;background:#e2f5ea!important}.alert{color:#8a5200;background:#fff2d3!important}.overdue{color:#a31b24;background:#ffe5e7!important}
+ .foot{margin-top:22px;font-size:10px;color:#68798c}.print{margin-top:20px;padding:10px 18px;background:#0b63c5;color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer}
+ @media print{.print{display:none}body{margin:12mm}}
  </style></head><body>
  <div class="head"><img src="${crest}" alt=""><div><div class="title">POLÍCIA MILITAR — MATO GROSSO DO SUL</div><div class="title">CONTROLE DE VIATURAS — CPA-7</div><div class="sub">Relatório geral da frota</div></div></div>
- <div class="summary"><div class="box">Unidades<b>${s.units.length}</b></div><div class="box">Viaturas<b>${list.length}</b></div><div class="box">Alertas<b>${nAlert}</b></div><div class="box">Vencidas<b>${nOver}</b></div></div>
+ <div class="summary"><div class="box">Unidades<b>${s.units.length}</b></div><div class="box">Viaturas<b>${list.length}</b></div><div class="box a">Em alerta<b>${nAlert}</b></div><div class="box v">Vencidas<b>${nOver}</b></div></div>
  <table><thead><tr><th>Unidade</th><th>Prefixo</th><th>Placa</th><th>Veículo</th><th>KM atual</th><th>Próxima troca</th><th>Restante</th><th>Última troca</th><th>Situação</th></tr></thead><tbody>${rows || '<tr><td colspan="9">Nenhuma viatura cadastrada.</td></tr>'}</tbody></table>
  <div class="foot">Emitido em ${now} pelo sistema Controle de Viaturas CPA-7.</div>
  <button class="print" onclick="window.print()">Imprimir / Salvar PDF</button>
@@ -333,8 +379,8 @@ async function fleetReport(){
 }
 
 function units(){
-  $('content').innerHTML = `<div class="page-head"><div><div class="eyebrow">ESTRUTURA</div><h1>Unidades</h1><p>Organização da frota do CPA-7</p></div><button class="primary" onclick="unitForm()">+ Nova unidade</button></div>
- <div class="cards-list">${s.units.map(u => `<div class="list-card"><div><b>${esc(u.name)}</b><span>${s.vehicles.filter(v => v.unit === u.name).length} viatura(s) · ${s.drivers.filter(d => d.unit === u.name).length} motorista(s)</span></div><div class="row-actions"><button class="secondary" onclick="openUnitVehicles('${u.id}')">Viaturas</button><button class="secondary" onclick="unitForm('${u.id}')">Renomear</button><button class="danger-btn" onclick="delUnit('${u.id}')">Excluir</button></div></div>`).join('') || '<div class="empty-card">Nenhuma unidade cadastrada.</div>'}</div>`;
+  $('content').innerHTML = `<div class="page-head"><div><h1>Unidades</h1><p>Organização da frota do CPA-7</p></div><button class="primary" onclick="unitForm()">${ic('plus')} Nova unidade</button></div>
+ <div class="cards-list">${s.units.map(u => `<div class="list-card"><div class="lc-main"><span class="avatar">${ic('building')}</span><div><b>${esc(u.name)}</b><span>${s.vehicles.filter(v => v.unit === u.name).length} viatura(s) · ${s.drivers.filter(d => d.unit === u.name).length} motorista(s)</span></div></div><div class="row-actions"><button class="secondary" onclick="openUnitVehicles('${u.id}')">Viaturas</button><button class="secondary" onclick="unitForm('${u.id}')">Renomear</button><button class="danger-btn" onclick="delUnit('${u.id}')">Excluir</button></div></div>`).join('') || '<div class="empty-card">Nenhuma unidade cadastrada.</div>'}</div>`;
 }
 function unitForm(id){
   const u = id ? findUnit(id) : null;
@@ -365,7 +411,7 @@ function delUnit(id){
 
 function vehicles(){
   if (ui.vehUnit && !s.units.some(u => u.name === ui.vehUnit)) ui.vehUnit = '';
-  $('content').innerHTML = `<div class="page-head"><div><div class="eyebrow">FROTA</div><h1>Viaturas</h1><p>${ui.vehUnit ? `Unidade: ${esc(ui.vehUnit)}` : 'Todas as viaturas cadastradas'}</p></div><button class="primary" onclick="vehicleForm()">+ Nova viatura</button></div>
+  $('content').innerHTML = `<div class="page-head"><div><h1>Viaturas</h1><p>${ui.vehUnit ? `Unidade: ${esc(ui.vehUnit)}` : 'Todas as viaturas cadastradas'}</p></div><button class="primary" onclick="vehicleForm()">${ic('plus')} Nova viatura</button></div>
  <div class="toolbar"><input id="searchVehicle" type="search" placeholder="Pesquisar prefixo, placa, modelo ou unidade..." value="${esc(ui.vehQuery)}" oninput="ui.vehQuery=this.value;filterVehicles()"><select id="unitFilter" onchange="ui.vehUnit=this.value;vehicles()"><option value="">Todas as unidades</option>${s.units.map(u => `<option value="${esc(u.name)}" ${u.name === ui.vehUnit ? 'selected' : ''}>${esc(u.name)}</option>`).join('')}</select></div>
  <div id="vehicleList"></div>`;
   filterVehicles();
@@ -378,22 +424,18 @@ function filterVehicles(){
 function vehicleCards(arr){
   if (!arr.length) return '<div class="empty-card">Nenhuma viatura encontrada.</div>';
   return arr.map(v => {
-    const st = vstate(v);
-    return `<article class="vehicle-card vehicle-row ${st.key}">
-   <div class="vehicle-main vehicle-main-row">
-    <div class="vehicle-title vehicle-title-row"><div><h3>${esc(v.prefix)}</h3><span>${esc(v.brand)} ${esc(v.model)}${v.plate ? ' · ' + esc(v.plate) : ''}</span><small>${esc(v.unit)}</small></div></div>
-    <div class="vehicle-metrics vehicle-metrics-row">
-     <div><span><i class="metric-icon">◴</i> KM atual</span><strong>${kmfmt(v.km)}</strong></div>
-     <div><span><i class="metric-icon">🔧</i> Próxima troca</span><strong>${kmfmt(v.next)}</strong></div>
-     <div class="vehicle-status-box ${st.key}"><span><i class="status-dot ${st.key}"></i> Situação</span><strong class="${st.key}">${st.label}</strong></div>
+    const st = vstate(v), driven = Math.max(0, v.km - v.last);
+    const btn = (cls, fn, icon, short, long) => `<button class="${cls}" onclick="${fn}('${v.id}')" title="${long}" aria-label="${long}">${ic(icon)}<span class="t-s">${short}</span><span class="t-l">${long}</span></button>`;
+    return `<article class="vcard ${st.key}">
+    <div class="vc-id"><h3>${esc(v.prefix)}</h3>${v.plate ? `<span class="plate">${esc(v.plate)}</span>` : ''}</div>
+    <div class="vc-car"><b>${esc(v.brand)} ${esc(v.model)}</b><small>${esc(v.unit)}${v.year ? ' · ' + esc(v.year) : ''}</small></div>
+    <div class="vc-km"><label>KM atual</label><b>${kmfmt(v.km)}</b></div>
+    <div class="vc-km"><label>Próxima troca</label><b>${kmfmt(v.next)}</b></div>
+    <div class="vc-oil">${chip(st)}${meterHtml(v, false)}<div class="meter-cap"><span>${kmfmt(driven)} km rodados</span><span>${v.oilDate ? 'Troca: ' + esc(fmtDate(v.oilDate)) : ''}</span></div></div>
+    <div class="vc-actions">
+     ${btn('secondary','kmForm','gauge','KM','Atualizar KM')}${btn('primary','oilForm','drop','Óleo','Troca de óleo')}${btn('orange','maintForm','wrench','Manut.','Manutenção')}
+     <button class="edit-btn" onclick="vehicleForm('${v.id}')" aria-label="Editar viatura" title="Editar">${ic('edit')}</button>
     </div>
-    <div class="vehicle-actions vehicle-actions-row">
-     <button class="secondary" onclick="kmForm('${v.id}')"><span class="btn-icon">⟳</span> Atualizar KM</button>
-     <button class="primary" onclick="oilForm('${v.id}')"><span class="btn-icon">💧</span> Troca de óleo</button>
-     <button class="orange" onclick="maintForm('${v.id}')"><span class="btn-icon">⚙</span> Manutenção</button>
-     <button class="edit-btn" onclick="vehicleForm('${v.id}')"><span class="btn-icon">✎</span> Editar</button>
-    </div>
-   </div>
   </article>`;
   }).join('');
 }
@@ -504,8 +546,8 @@ function maintForm(id){
 
 function drivers(){
   const list = s.drivers.slice().sort((a,b) => String(a.name).localeCompare(String(b.name),'pt-BR'));
-  $('content').innerHTML = `<div class="page-head"><div><div class="eyebrow">ACESSOS</div><h1>Motoristas</h1><p>Cadastre e controle os acessos dos motoristas</p></div><button class="primary" onclick="driverForm()">+ Novo motorista</button></div>
- <div class="cards-list">${list.map(d => `<div class="list-card driver-row"><div class="driver-info"><div class="avatar">👤</div><div><b>${esc(d.name)}</b><span>${d.matricula ? 'Mat. ' + esc(d.matricula) + ' · ' : ''}${esc(d.email)} · ${esc(d.unit)}</span></div></div><div class="driver-actions-row"><span class="pill ${d.active === false ? 'off' : ''}">${d.active === false ? 'Inativo' : 'Ativo'}</span><button class="secondary" onclick="driverForm('${d.id}')">Editar</button><button class="danger-btn" onclick="delDriver('${d.id}')">Excluir</button></div></div>`).join('') || '<div class="empty-card">Nenhum motorista cadastrado.</div>'}</div>`;
+  $('content').innerHTML = `<div class="page-head"><div><h1>Motoristas</h1><p>Cadastre e controle os acessos dos motoristas</p></div><button class="primary" onclick="driverForm()">${ic('plus')} Novo motorista</button></div>
+ <div class="cards-list">${list.map(d => `<div class="list-card driver-row"><div class="lc-main"><span class="avatar">${ic('user')}</span><div><b>${esc(d.name)}</b><span>${d.matricula ? 'Mat. ' + esc(d.matricula) + ' · ' : ''}${esc(d.email)} · ${esc(d.unit)}</span></div></div><div class="driver-actions-row"><span class="pill ${d.active === false ? 'off' : ''}">${d.active === false ? 'Inativo' : 'Ativo'}</span><button class="secondary" onclick="driverForm('${d.id}')">Editar</button><button class="danger-btn" onclick="delDriver('${d.id}')">Excluir</button></div></div>`).join('') || '<div class="empty-card">Nenhum motorista cadastrado.</div>'}</div>`;
 }
 function driverForm(id){
   if (!s.units.length) { alert('Cadastre uma unidade primeiro.'); go('units'); return; }
@@ -549,11 +591,12 @@ function delDriver(id){
 function maintRow(m, canDelete){
   const v = findV(m.vehicle);
   const value = m.value ? money(m.value) : '—';
-  return `<div class="list-card maint-row"><div><b>${esc(v?.prefix || m.prefix || 'Viatura removida')} · ${esc(m.type)}</b><span>${esc(fmtDate(m.date))} · KM ${kmfmt(m.km)}${v ? ' · ' + esc(v.unit) : ''}</span>${m.desc ? `<span>${esc(m.desc)}</span>` : ''}<small>${esc(m.source || '')}</small></div><div class="maint-side"><strong>${value}</strong>${canDelete ? `<button class="danger-btn small" onclick="delMaint('${m.id}')">Excluir</button>` : ''}</div></div>`;
+  const oil = m.type === 'Troca de óleo';
+  return `<div class="list-card maint-row"><div class="lc-main"><span class="avatar ${oil ? 'oil' : ''}">${ic(oil ? 'drop' : 'wrench')}</span><div><b>${esc(v?.prefix || m.prefix || 'Viatura removida')} · ${esc(m.type)}</b><span>${esc(fmtDate(m.date))} · KM ${kmfmt(m.km)}${v ? ' · ' + esc(v.unit) : ''}</span>${m.desc ? `<span>${esc(m.desc)}</span>` : ''}<small>${esc(m.source || '')}</small></div></div><div class="maint-side"><strong>${value}</strong>${canDelete ? `<button class="danger-btn small" onclick="delMaint('${m.id}')">Excluir</button>` : ''}</div></div>`;
 }
 function maint(){
   if (ui.maintVehicle && !findV(ui.maintVehicle)) ui.maintVehicle = '';
-  $('content').innerHTML = `<div class="page-head"><div><div class="eyebrow">HISTÓRICO</div><h1>Manutenções</h1><p>Registros de óleo e serviços da frota</p></div></div>
+  $('content').innerHTML = `<div class="page-head"><div><h1>Manutenções</h1><p>Registros de óleo e serviços da frota</p></div></div>
  <div class="toolbar"><input type="search" placeholder="Pesquisar tipo, descrição ou responsável..." value="${esc(ui.maintQuery)}" oninput="ui.maintQuery=this.value;maintList()"><select onchange="ui.maintVehicle=this.value;maint()"><option value="">Todas as viaturas</option>${sortV(s.vehicles).map(v => `<option value="${v.id}" ${v.id === ui.maintVehicle ? 'selected' : ''}>${esc(v.prefix)} — ${esc(v.unit)}</option>`).join('')}</select></div>
  <div id="maintList"></div>`;
   maintList();
@@ -599,18 +642,17 @@ function driverShell(){
   $('app').innerHTML = `${shellHeader('CPA-7','Área do Motorista')}
  <main class="driver-layout">
   <aside class="driver-side">
-   <img src="${CREST}" class="driver-crest" alt="">
-   <div class="driver-user"><b id="driverName">${esc(d?.name)}</b><span id="driverUnit">${esc(d?.unit)}</span></div>
+   <div class="driver-user"><div class="driver-avatar">${esc(initials(d?.name))}</div><b id="driverName">${esc(d?.name)}</b><span id="driverUnit">${esc(d?.unit)}</span></div>
    <div class="driver-menu">
-    <button class="driver-menu-btn" data-page="driverHome" onclick="go('driverHome')">🚓 Viaturas</button>
-    <button class="driver-menu-btn" data-page="driverHistory" onclick="go('driverHistory')">📋 Histórico</button>
-    <button class="driver-menu-btn" onclick="editDriverProfile()">👤 Meu cadastro</button>
-    <button class="driver-menu-btn" onclick="changeDriverPassword()">🔒 Minha senha</button>
+    <button class="driver-menu-btn" data-page="driverHome" onclick="go('driverHome')">${ic('car')}Viaturas</button>
+    <button class="driver-menu-btn" data-page="driverHistory" onclick="go('driverHistory')">${ic('clipboard')}Histórico</button>
+    <button class="driver-menu-btn" onclick="editDriverProfile()">${ic('user')}Meu cadastro</button>
+    <button class="driver-menu-btn" onclick="changeDriverPassword()">${ic('lock')}Minha senha</button>
    </div>
   </aside>
   <section class="driver-content" id="driverContent"></section>
  </main>
- <nav class="mobile-nav"><button data-page="driverHome" onclick="go('driverHome')"><i>🚓</i><span>Viaturas</span></button><button data-page="driverHistory" onclick="go('driverHistory')"><i>📋</i><span>Histórico</span></button><button onclick="editDriverProfile()"><i>👤</i><span>Cadastro</span></button><button onclick="changeDriverPassword()"><i>🔒</i><span>Senha</span></button></nav>`;
+ <nav class="mobile-nav"><button data-page="driverHome" onclick="go('driverHome')">${ic('car')}<span>Viaturas</span></button><button data-page="driverHistory" onclick="go('driverHistory')">${ic('clipboard')}<span>Histórico</span></button><button onclick="editDriverProfile()">${ic('user')}<span>Cadastro</span></button><button onclick="changeDriverPassword()">${ic('lock')}<span>Senha</span></button></nav>`;
 }
 function driverHome(){
   const d = me(); if (!d) { logout(); return false; }
@@ -620,27 +662,27 @@ function driverHome(){
   const v = findV(selected);
   const own = sortV(s.vehicles.filter(x => x.unit === d.unit)), others = sortV(s.vehicles.filter(x => x.unit !== d.unit));
   const opt = x => `<option value="${x.id}" ${x.id === selected ? 'selected' : ''}>${esc(x.prefix)} — ${esc(x.plate)}${x.unit !== d.unit ? ' — ' + esc(x.unit) : ''}</option>`;
-  $('driverContent').innerHTML = `<div class="driver-page-head"><div><div class="eyebrow">ÁREA DO MOTORISTA</div><h1>Selecione a viatura</h1><p>Escolha a viatura para registrar KM, óleo ou manutenção.</p></div></div>
-   <div class="selector-card"><label for="driverVehicleSelect">Viatura</label><div class="select-wrap"><span>🚓</span><select id="driverVehicleSelect" onchange="driverSelect(this.value)"><option value="">Escolha uma viatura...</option>${own.length ? `<optgroup label="${esc(d.unit)}">${own.map(opt).join('')}</optgroup>` : ''}${others.length ? `<optgroup label="Outras unidades">${others.map(opt).join('')}</optgroup>` : ''}</select></div></div>
-   ${v ? driverVehicle(v) : `<div class="empty-driver"><img src="${CREST}" alt=""><h2>Nenhuma viatura selecionada</h2><p>Use a lista acima para escolher uma viatura.</p></div>`}`;
+  $('driverContent').innerHTML = `<div class="driver-page-head"><div><h1>Selecione a viatura</h1><p>Escolha a viatura para registrar KM, óleo ou manutenção.</p></div></div>
+   <div class="selector-card"><label for="driverVehicleSelect">Viatura</label><div class="select-wrap">${ic('car')}<select id="driverVehicleSelect" onchange="driverSelect(this.value)"><option value="">Escolha uma viatura...</option>${own.length ? `<optgroup label="${esc(d.unit)}">${own.map(opt).join('')}</optgroup>` : ''}${others.length ? `<optgroup label="Outras unidades">${others.map(opt).join('')}</optgroup>` : ''}</select></div></div>
+   ${v ? driverVehicle(v) : `<div class="empty-driver"><div class="dv-ico">${ic('car')}</div><h2>Nenhuma viatura selecionada</h2><p>Use a lista acima para escolher uma viatura.</p></div>`}`;
   return true;
 }
 function driverSelect(id){ s.session.selectedVehicleId = id; saveLocal(); driverHome(); }
 function driverVehicle(v){
   const st = vstate(v);
-  const msg = {ok: '🟢 VIATURA EM SITUAÇÃO NORMAL — próxima troca em ' + kmfmt(st.rem) + ' km', alert: `🚨 TROCA DE ÓLEO PRÓXIMA — FALTAM ${kmfmt(st.rem)} km`, overdue: `🔴 TROCA DE ÓLEO VENCIDA HÁ ${kmfmt(-st.rem)} km — comunique o responsável`}[st.key];
-  return `<div class="driver-status ${st.key}">${msg}</div>
+  const msg = {ok: ['check', 'Viatura em situação normal — próxima troca em ' + kmfmt(st.rem) + ' km'], alert: ['alert', `Troca de óleo próxima — faltam ${kmfmt(st.rem)} km`], overdue: ['alert', `Troca de óleo vencida há ${kmfmt(-st.rem)} km — comunique o responsável`]}[st.key];
+  return `<div class="driver-status ${st.key}">${ic(msg[0])}<span>${msg[1]}</span></div>
+  <div class="driver-vehicle-card"><div class="dv-ico">${ic('car')}</div><div><span class="lbl">Viatura selecionada</span><h2>${esc(v.prefix)}</h2><p>${esc(v.unit)} · ${esc(v.brand)} ${esc(v.model)}</p></div>${v.plate ? `<span class="plate big">${esc(v.plate)}</span>` : ''}<div class="dv-meter">${meterHtml(v)}</div></div>
   <div class="selected-driver-grid">
-  <div class="driver-vehicle-card"><img src="${CREST}" alt=""><div><span>VIATURA SELECIONADA</span><h2>${esc(v.prefix)}</h2><p>${esc(v.unit)} · ${esc(v.brand)} ${esc(v.model)} · ${esc(v.plate)}</p></div></div>
-  <div class="action-card km-card"><div class="action-icon">◉</div><h3>Atualizar KM</h3><span>KM atual</span><strong>${kmfmt(v.km)} km</strong><button class="green" onclick="kmForm('${v.id}')">Registrar KM</button></div>
-  <div class="action-card oil-card"><div class="action-icon">🛢</div><h3>Troca de óleo</h3><span>Próxima troca</span><strong>${kmfmt(v.next)} km</strong><button class="blue" onclick="oilForm('${v.id}')">Registrar troca</button></div>
-  <div class="action-card maint-card"><div class="action-icon">🔧</div><h3>Manutenção</h3><span>Última troca de óleo</span><strong>${v.oilDate ? esc(fmtDate(v.oilDate)) : kmfmt(v.last) + ' km'}</strong><button class="orange" onclick="maintForm('${v.id}')">Registrar manutenção</button></div>
+  <div class="action-card km-card"><div class="action-icon">${ic('gauge')}</div><h3>Atualizar KM</h3><span>KM atual</span><strong>${kmfmt(v.km)} km</strong><button class="green" onclick="kmForm('${v.id}')">Registrar KM</button></div>
+  <div class="action-card oil-card"><div class="action-icon">${ic('drop')}</div><h3>Troca de óleo</h3><span>Próxima troca</span><strong>${kmfmt(v.next)} km</strong><button class="blue" onclick="oilForm('${v.id}')">Registrar troca</button></div>
+  <div class="action-card maint-card"><div class="action-icon">${ic('wrench')}</div><h3>Manutenção</h3><span>Última troca de óleo</span><strong>${v.oilDate ? esc(fmtDate(v.oilDate)) : kmfmt(v.last) + ' km'}</strong><button class="orange" onclick="maintForm('${v.id}')">Registrar manutenção</button></div>
  </div>`;
 }
 function driverHistory(){
   const d = me(); if (!d) { logout(); return false; }
   const list = s.maintenance.slice().reverse().filter(m => !ui.histMine || m.driverId === d.id || m.source === `Motorista: ${d.name}`);
-  $('driverContent').innerHTML = `<div class="driver-page-head"><div><div class="eyebrow">ÁREA DO MOTORISTA</div><h1>Histórico</h1><p>Trocas de óleo e manutenções registradas.</p></div></div>
+  $('driverContent').innerHTML = `<div class="driver-page-head"><div><h1>Histórico</h1><p>Trocas de óleo e manutenções registradas.</p></div></div>
  <div class="toolbar"><select onchange="ui.histMine=this.value==='1';driverHistory()"><option value="0">Todos os lançamentos</option><option value="1" ${ui.histMine ? 'selected' : ''}>Somente os meus</option></select></div>
  <div class="cards-list history-panel">${list.map(m => maintRow(m, false)).join('') || '<div class="empty-card">Nenhum lançamento registrado.</div>'}</div>`;
   return true;
@@ -693,15 +735,14 @@ function tcardIntegrationPage() {
   $('content').innerHTML = `
     <div class="page-head">
       <div>
-        <div class="eyebrow">INTEGRAÇÕES</div>
         <h1>TCard Brasil</h1>
         <p>Consulta e atualização da quilometragem das viaturas.</p>
       </div>
     </div>
 
-    <div class="empty-card" style="text-align:left;max-width:900px">
+    <div class="panel">
       <p><b>Regras de segurança</b></p>
-      <ul>
+      <ul class="rules">
         <li>Correspondência somente pela placa.</li>
         <li>Nenhuma viatura será cadastrada automaticamente.</li>
         <li>A quilometragem só será atualizada se o valor do TCard não for inferior ao atual.</li>
@@ -711,14 +752,14 @@ function tcardIntegrationPage() {
 
       <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
         <button class="secondary" id="tcardStatusBtn" type="button">
-          Verificar status
+          ${ic('check')} Verificar status
         </button>
         <button class="primary" id="tcardSyncBtn" type="button">
-          Sincronizar agora
+          ${ic('sync')} Sincronizar agora
         </button>
       </div>
 
-      <pre id="tcardResult" style="white-space:pre-wrap;margin-top:16px"
+      <pre id="tcardResult" class="console"
         aria-live="polite">Clique em “Verificar status” para consultar a integração.</pre>
     </div>
   `;
