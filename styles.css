@@ -467,4 +467,57 @@ button.stat{cursor:pointer}button.stat:hover{border-color:#9cc3ea}
     padding: 10px !important;
   }
 }
+/* CPA-7 — cartões de viaturas mais compactos */
+.vehicle-card {
+  min-height: 0 !important;
+  padding: 8px 10px !important;
+  margin-bottom: 5px !important;
+  gap: 6px !important;
+}
+
+.vehicle-card h2,
+.vehicle-card h3,
+.vehicle-card .vehicle-title {
+  font-size: 13px !important;
+  line-height: 1.15 !important;
+}
+
+.vehicle-card p,
+.vehicle-card small,
+.vehicle-card .vehicle-subtitle {
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+}
+
+.vehicle-card .km-value,
+.vehicle-card .stat-value {
+  font-size: 13px !important;
+  line-height: 1.15 !important;
+}
+
+.vehicle-card .stat-label {
+  font-size: 8px !important;
+}
+
+.vehicle-card .actions {
+  gap: 3px !important;
+}
+
+.vehicle-card .actions button {
+  font-size: 9px !important;
+  padding: 5px 6px !important;
+  min-height: 27px !important;
+}
+
+.vehicle-card .stat,
+.vehicle-card .vehicle-stat,
+.vehicle-card .km-box {
+  padding: 7px 8px !important;
+  min-height: 0 !important;
+}
+
+.vehicle-card .actions {
+  margin-top: 4px !important;
+}
+
 
