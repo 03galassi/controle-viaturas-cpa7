@@ -10,16 +10,6 @@ Desenvolvido por **ST Galassi**.
 
 Os dados ficam no Firebase (documento `app/state`), no mesmo formato da versão anterior.
 
-## v13 — redesenho visual
-- Novo visual: tipografia e espaçamento revistos, ícones SVG no lugar dos emojis, cores institucionais (azul-marinho e verde).
-- Removido o `zoom: 0.5` do computador: a interface agora tem tamanho real, nítida e responsiva.
-- Login em duas colunas (computador) e cartão sobre o cabeçalho (celular), com botão para mostrar a senha.
-- Painel: cartões com ícones, barra de situação da frota (em dia / alerta / vencidas) e lista das trocas a fazer.
-- Viaturas: placa em formato de placa Mercosul e **medidor de troca de óleo** (KM rodado desde a última troca).
-- Motorista: menu lateral com iniciais, resumo da viatura com medidor e cartões de ação maiores para o celular.
-- Relatório impresso com cabeçalho institucional e situação colorida.
-- Brasão reduzido de 1,7 MB para 175 KB.
-
 ## v12
 - Interface no computador reduzida para 60% (variável `--escala` no fim do styles.css).
 
