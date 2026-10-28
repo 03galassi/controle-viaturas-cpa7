@@ -312,3 +312,10 @@ button.stat{cursor:pointer}button.stat:hover{border-color:#9cc3ea}
     justify-content: flex-end;
   }
 }
+/* CPA-7 — redução visual de 50% em telas de computador */
+@media (min-width: 901px) {
+  html {
+    zoom: 0.67 !important;
+  }
+}
+
