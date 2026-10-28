@@ -127,397 +127,124 @@ button.stat{cursor:pointer}button.stat:hover{border-color:#9cc3ea}
 @media(max-width:900px){.vehicle-metrics.vehicle-metrics-row .vehicle-status-box strong{font-size:14px}}
 @media(max-width:420px){.vehicle-metrics.vehicle-metrics-row{grid-template-columns:repeat(3,minmax(0,1fr))}.vehicle-metrics.vehicle-metrics-row>div{min-height:60px;padding:8px 7px}.vehicle-metrics.vehicle-metrics-row strong{font-size:15px}.vehicle-metrics.vehicle-metrics-row .metric-icon{display:none}}
 
-/* ===== Escala da interface (computador) — altere --escala para ajustar ===== */
-:root{--escala:.6}
-@media(min-width:901px){
- html{zoom:var(--escala)}
- .admin-layout,.driver-layout{min-height:calc(100vh / var(--escala) - 118px)}
- .login-screen{min-height:calc(100vh / var(--escala))}
- .modal{max-height:calc(92vh / var(--escala))}
+
+/* ===== CPA-7: escala e interface compacta ===== */
+:root {
+  --escala: .82;
 }
 
-/* ===== CPA-7: interface compacta ===== */
+@media (min-width: 901px) {
+  html {
+    zoom: var(--escala);
+  }
 
-/* Menu superior */
-.topbar {
-  height: 88px;
-  padding: 10px 20px;
-  border-bottom-width: 3px;
-  gap: 12px;
-}
+  .admin-layout,
+  .driver-layout {
+    min-height: calc(100vh / var(--escala) - 118px);
+  }
 
-.brand-wrap {
-  gap: 12px;
-}
+  .login-screen {
+    min-height: calc(100vh / var(--escala));
+  }
 
-.crest {
-  width: 58px;
-  height: 66px;
-}
+  .modal {
+    max-height: calc(92vh / var(--escala));
+  }
 
-.brand-small {
-  font-size: 17px;
-  letter-spacing: .5px;
-}
-
-.brand-state {
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-
-.brand-title {
-  font-size: 19px;
-  margin-top: 2px;
-}
-
-.brand-sub {
-  font-size: 11px;
-}
-
-.top-actions {
-  gap: 10px;
-}
-
-.system-label {
-  font-size: 12px;
-}
-
-.top-exit {
-  padding: 8px 12px;
-  border-radius: 7px;
-  font-size: 12px;
-}
-
-/* Barra lateral administrativa */
-.admin-layout {
-  grid-template-columns: 205px minmax(0, 1fr);
-  min-height: calc(100vh - 88px);
-}
-
-.sidebar {
-  padding: 12px 9px;
-  gap: 5px;
-}
-
-.profile {
-  gap: 8px;
-  padding: 8px 6px 12px;
-  margin-bottom: 4px;
-  font-size: 12px;
-}
-
-.profile img {
-  width: 38px;
-  height: 46px;
-}
-
-.profile span {
-  font-size: 10px;
-  margin-top: 3px;
-}
-
-.nav {
-  padding: 10px 11px;
-  border-radius: 7px;
-  font-size: 13px;
-  line-height: 1.25;
-}
-
-/* Conteúdo principal */
-.main-content {
-  padding: 22px;
-}
-
-.admin-layout .page-head h1 {
-  font-size: 24px;
-}
-
-.admin-layout .page-head p {
-  font-size: 12px;
-}
-
-.admin-layout .section-title h2 {
-  font-size: 16px;
-}
-
-/* Botões e campos mais compactos */
-.admin-layout button,
-.admin-layout input,
-.admin-layout select,
-.admin-layout textarea {
-  font-size: 12px;
-}
-
-.admin-layout .primary {
-  padding: 9px 13px;
-}
-
-.admin-layout .secondary,
-.admin-layout .orange,
-.admin-layout .danger-btn {
-  padding: 8px 11px;
-}
-
-/* Menu do motorista */
-.driver-layout {
-  grid-template-columns: 220px minmax(0, 1fr);
-  min-height: calc(100vh - 88px);
-}
-
-.driver-side {
-  padding: 16px 11px;
-}
-
-.driver-crest {
-  width: 75px;
-  height: 85px;
-  margin-bottom: 10px;
-}
-
-.driver-user {
-  font-size: 12px;
-  padding-bottom: 14px;
-}
-
-.driver-user span {
-  font-size: 10px;
-}
-
-.driver-menu {
-  margin-top: 13px;
-  gap: 5px;
-}
-
-.driver-menu-btn {
-  padding: 9px 10px;
-  font-size: 12px;
-  border-radius: 7px;
-}
-
-.driver-content {
-  padding: 22px;
-}
-
-/* Ajustes para telas menores */
-@media (max-width: 900px) {
   .topbar {
-    padding: 9px 12px;
+    height: 100px;
+    min-height: 100px;
+    padding: 10px 22px;
+    border-bottom-width: 4px;
   }
 
-  .brand-wrap {
-    gap: 8px;
+  .brand-wrap { gap: 12px; }
+  .crest { width: 60px; height: 72px; }
+  .brand-small { font-size: 18px; letter-spacing: .5px; }
+  .brand-state { font-size: 12px; letter-spacing: 1px; }
+  .brand-title { font-size: 20px; margin-top: 3px; }
+  .brand-sub { font-size: 10px; }
+  .top-actions { gap: 12px; }
+  .system-label { font-size: 11px; }
+  .top-exit { padding: 9px 13px; font-size: 12px; border-radius: 8px; }
+
+  .admin-layout { grid-template-columns: 210px minmax(0, 1fr); }
+  .sidebar { padding: 12px 9px; gap: 5px; }
+  .profile { gap: 8px; padding: 8px 5px 12px; margin-bottom: 4px; }
+  .profile img { width: 36px; height: 44px; }
+  .nav { padding: 10px; font-size: 13px; border-radius: 7px; }
+
+  .main-content { padding: 22px; }
+  .admin-layout .page-head h1 { font-size: 25px; }
+  .admin-layout .page-head p { font-size: 12px; }
+
+  .admin-layout button,
+  .admin-layout input,
+  .admin-layout select,
+  .admin-layout textarea {
+    font-size: 12px;
   }
 
-  .main-content,
-  .driver-content {
-    padding: 14px;
-  }
-}
-/* ===== CPA-7: compactação reforçada para zoom 100% ===== */
-
-.topbar {
-  height: 76px !important;
-  min-height: 76px !important;
-  padding: 6px 14px !important;
-}
-
-.crest {
-  width: 44px !important;
-  height: 52px !important;
-}
-
-.brand-small {
-  font-size: 14px !important;
-  line-height: 1.1 !important;
-}
-
-.brand-state {
-  font-size: 9px !important;
-  line-height: 1.1 !important;
-}
-
-.brand-title {
-  font-size: 16px !important;
-  line-height: 1.1 !important;
-}
-
-.brand-sub {
-  font-size: 9px !important;
-  line-height: 1.2 !important;
-}
-
-.system-label {
-  font-size: 10px !important;
-}
-
-.top-exit {
-  padding: 6px 10px !important;
-  font-size: 10px !important;
-}
-
-.admin-layout {
-  grid-template-columns: 170px minmax(0, 1fr) !important;
-  min-height: calc(100vh - 76px) !important;
-}
-
-.sidebar {
-  padding: 8px 7px !important;
-  gap: 3px !important;
-}
-
-.profile {
-  padding: 6px 4px 9px !important;
-  gap: 6px !important;
-}
-
-.profile img {
-  width: 30px !important;
-  height: 36px !important;
-}
-
-.profile strong,
-.profile b {
-  font-size: 10px !important;
-}
-
-.profile span {
-  font-size: 9px !important;
-}
-
-.nav {
-  padding: 8px 8px !important;
-  font-size: 11px !important;
-  line-height: 1.2 !important;
-  border-radius: 5px !important;
-}
-
-.main-content {
-  padding: 14px !important;
-}
-
-.page-head {
-  margin-bottom: 10px !important;
-}
-
-.page-head h1 {
-  font-size: 20px !important;
-  line-height: 1.2 !important;
-}
-
-.page-head p {
-  font-size: 10px !important;
-}
-
-.admin-layout button {
-  font-size: 10px !important;
-  padding: 7px 9px !important;
-}
-
-.admin-layout input,
-.admin-layout select {
-  font-size: 11px !important;
-  min-height: 30px !important;
-}
-
-/* Cartões de viaturas */
-.vehicle-card {
-  padding: 10px 12px !important;
-  gap: 8px !important;
-  margin-bottom: 7px !important;
-}
-
-.vehicle-card h2,
-.vehicle-card h3,
-.vehicle-card .vehicle-title {
-  font-size: 15px !important;
-  line-height: 1.2 !important;
-}
-
-.vehicle-card p,
-.vehicle-card small,
-.vehicle-card .vehicle-subtitle {
-  font-size: 10px !important;
-  line-height: 1.3 !important;
-}
-
-.vehicle-card .km-value,
-.vehicle-card .stat-value {
-  font-size: 15px !important;
-}
-
-.vehicle-card .stat-label {
-  font-size: 9px !important;
-}
-
-.vehicle-card .actions {
-  gap: 4px !important;
-}
-
-.vehicle-card .actions button {
-  font-size: 9px !important;
-  padding: 6px 7px !important;
-}
-
-@media (max-width: 900px) {
-  .admin-layout {
-    grid-template-columns: 145px minmax(0, 1fr) !important;
+  .vehicle-card.vehicle-row {
+    margin-bottom: 9px;
+    border-radius: 11px;
   }
 
-  .main-content {
-    padding: 10px !important;
+  .vehicle-main.vehicle-main-row {
+    padding: 10px 12px;
+    gap: 10px;
   }
-}
-/* CPA-7 — cartões de viaturas mais compactos */
-.vehicle-card {
-  min-height: 0 !important;
-  padding: 8px 10px !important;
-  margin-bottom: 5px !important;
-  gap: 6px !important;
-}
 
-.vehicle-card h2,
-.vehicle-card h3,
-.vehicle-card .vehicle-title {
-  font-size: 13px !important;
-  line-height: 1.15 !important;
+  .vehicle-title.vehicle-title-row h3 {
+    font-size: 19px;
+    margin-bottom: 4px;
+  }
+
+  .vehicle-title.vehicle-title-row span {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  .vehicle-title.vehicle-title-row small {
+    font-size: 10px;
+    margin-top: 3px;
+  }
+
+  .vehicle-metrics.vehicle-metrics-row {
+    gap: 7px;
+  }
+
+  .vehicle-metrics.vehicle-metrics-row > div {
+    min-height: 58px;
+    padding: 7px 9px;
+  }
+
+  .vehicle-metrics.vehicle-metrics-row span {
+    font-size: 10px;
+    gap: 5px;
+  }
+
+  .vehicle-metrics.vehicle-metrics-row strong {
+    font-size: 17px;
+    margin-top: 3px;
+  }
+
+  .vehicle-metrics.vehicle-metrics-row .vehicle-status-box strong {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  .metric-icon { font-size: 15px; }
+
+  .vehicle-actions.vehicle-actions-row { gap: 5px; }
+
+  .vehicle-actions.vehicle-actions-row button {
+    min-height: 40px;
+    padding: 7px 9px;
+    font-size: 11px;
+    gap: 5px;
+    border-radius: 7px;
+  }
+
+  .btn-icon { font-size: 17px; }
 }
-
-.vehicle-card p,
-.vehicle-card small,
-.vehicle-card .vehicle-subtitle {
-  font-size: 9px !important;
-  line-height: 1.2 !important;
-}
-
-.vehicle-card .km-value,
-.vehicle-card .stat-value {
-  font-size: 13px !important;
-  line-height: 1.15 !important;
-}
-
-.vehicle-card .stat-label {
-  font-size: 8px !important;
-}
-
-.vehicle-card .actions {
-  gap: 3px !important;
-}
-
-.vehicle-card .actions button {
-  font-size: 9px !important;
-  padding: 5px 6px !important;
-  min-height: 27px !important;
-}
-
-.vehicle-card .stat,
-.vehicle-card .vehicle-stat,
-.vehicle-card .km-box {
-  padding: 7px 8px !important;
-  min-height: 0 !important;
-}
-
-.vehicle-card .actions {
-  margin-top: 4px !important;
-}
-
-
