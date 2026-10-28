@@ -6,6 +6,7 @@
 const KEY = 'cpa7_online_v10';
 const FIREBASE_CONFIG = {apiKey:"AIzaSyA2H-sd3gaBArqy6pE1pVcV-1Nz14N-dZE",authDomain:"controle-de-viaturas-cpa-7.firebaseapp.com",projectId:"controle-de-viaturas-cpa-7",storageBucket:"controle-de-viaturas-cpa-7.firebasestorage.app",messagingSenderId:"630650169264",appId:"1:630650169264:web:498aa0a12d48bcb3de9875",measurementId:"G-V4NC72LX2L"};
 const ADMIN_EMAIL = '03galassi@gmail.com';
+const TCARD_WORKER_URL = 'https://controle-viaturas-tcard-bridge.03galassi.workers.dev';
 const ALERT_KM = 1000;
 const CREST = 'assets/brasao_pmms.png';
 const MAINT_TYPES = ['Manutenção preventiva','Manutenção corretiva','Pneus','Bateria','Freios','Revisão','Outro'];
@@ -144,7 +145,7 @@ function refresh(){
   if (document.querySelector('.modal-backdrop')) { pendingRefresh = true; return; }
   go(ui.page, true);
 }
-const ADMIN_PAGES = {dashboard, units, vehicles, drivers, maint};
+const ADMIN_PAGES = {dashboard, units, vehicles, drivers, maint, tcard: tcardIntegrationPage};
 const DRIVER_PAGES = {driverHome, driverHistory};
 function go(page, keepScroll){
   const y = keepScroll ? window.scrollY : 0;
@@ -250,7 +251,7 @@ function shellHeader(title, subtitle=''){
 /* ---------- Administrador ---------- */
 function adminShell(){
   document.body.className = 'admin-body';
-  const items = [['dashboard','⌂','Painel'],['units','🏢','Unidades'],['vehicles','🚓','Viaturas'],['drivers','👮','Motoristas'],['maint','🔧','Manutenções']];
+  const items = [['dashboard','⌂','Painel'],['units','🏢','Unidades'],['vehicles','🚓','Viaturas'],['drivers','👮','Motoristas'],['maint','🔧','Manutenções'],['tcard','🔄','Integração TCard']];
   $('app').innerHTML = `${shellHeader('CPA-7','Comando de Policiamento da Fronteira Bioceânica')}
  <div class="admin-layout">
   <aside class="sidebar">
@@ -656,7 +657,108 @@ function editDriverProfile(){
   };
 }
 function changeDriverPassword(){ const d = me(); if (d) passwordModal(d.email); }
+/* ---------- Integração TCard ---------- */
+async function tcardWorkerRequest(path, method = 'GET') {
+  if (!firebaseReady || !auth?.currentUser) {
+    throw new Error('Entre no aplicativo com a conta administradora.');
+  }
 
+  const email = String(auth.currentUser.email || '').toLowerCase();
+
+  if (email !== ADMIN_EMAIL) {
+    throw new Error('A integração TCard está disponível somente para o administrador.');
+  }
+
+  const idToken = await auth.currentUser.getIdToken();
+
+  const response = await fetch(`${TCARD_WORKER_URL}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      ...(method === 'POST' ? { 'Content-Type': 'application/json' } : {})
+    },
+    ...(method === 'POST' ? { body: '{}' } : {})
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.error || `Erro na integração (HTTP ${response.status}).`);
+  }
+
+  return data;
+}
+
+function tcardIntegrationPage() {
+  $('content').innerHTML = `
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">INTEGRAÇÕES</div>
+        <h1>TCard Brasil</h1>
+        <p>Consulta e atualização da quilometragem das viaturas.</p>
+      </div>
+    </div>
+
+    <div class="empty-card" style="text-align:left;max-width:900px">
+      <p><b>Regras de segurança</b></p>
+      <ul>
+        <li>Correspondência somente pela placa.</li>
+        <li>Nenhuma viatura será cadastrada automaticamente.</li>
+        <li>A quilometragem só será atualizada se o valor do TCard não for inferior ao atual.</li>
+        <li>Valores inferiores serão tratados como divergências.</li>
+        <li>Os demais dados da viatura serão preservados.</li>
+      </ul>
+
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="secondary" id="tcardStatusBtn" type="button">
+          Verificar status
+        </button>
+        <button class="primary" id="tcardSyncBtn" type="button">
+          Sincronizar agora
+        </button>
+      </div>
+
+      <pre id="tcardResult" style="white-space:pre-wrap;margin-top:16px"
+        aria-live="polite">Clique em “Verificar status” para consultar a integração.</pre>
+    </div>
+  `;
+
+  $('tcardStatusBtn').onclick = async () => {
+    const out = $('tcardResult');
+    out.textContent = 'Consultando status...';
+    $('tcardStatusBtn').disabled = true;
+
+    try {
+      const data = await tcardWorkerRequest('/status');
+      out.textContent = JSON.stringify(data, null, 2);
+    } catch (e) {
+      out.textContent = `Falha: ${e.message}`;
+    } finally {
+      $('tcardStatusBtn').disabled = false;
+    }
+  };
+
+  $('tcardSyncBtn').onclick = async () => {
+    if (!confirm(
+      'Executar a sincronização TCard → Firestore agora? ' +
+      'A quilometragem será atualizada conforme as regras de segurança.'
+    )) return;
+
+    const out = $('tcardResult');
+    out.textContent = 'Sincronização em andamento...';
+    $('tcardSyncBtn').disabled = true;
+
+    try {
+      const data = await tcardWorkerRequest('/sync-now', 'POST');
+      out.textContent = JSON.stringify(data, null, 2);
+      toast('Solicitação de sincronização concluída.');
+    } catch (e) {
+      out.textContent = `Falha: ${e.message}`;
+    } finally {
+      $('tcardSyncBtn').disabled = false;
+    }
+  };
+}
 /* ---------- Início ---------- */
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 boot();
