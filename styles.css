@@ -128,82 +128,187 @@ button.stat{cursor:pointer}button.stat:hover{border-color:#9cc3ea}
 @media(max-width:420px){.vehicle-metrics.vehicle-metrics-row{grid-template-columns:repeat(3,minmax(0,1fr))}.vehicle-metrics.vehicle-metrics-row>div{min-height:60px;padding:8px 7px}.vehicle-metrics.vehicle-metrics-row strong{font-size:15px}.vehicle-metrics.vehicle-metrics-row .metric-icon{display:none}}
 
 /* ===== CPA-7: ajuste compacto sem zoom global ===== */
-/* O zoom do navegador permanece em 100%; os tamanhos são ajustados por componente. */
+
+/* ===== CPA-7 — layout horizontal compacto, zoom do navegador em 100% ===== */
+
+:root {
+  --escala: 1;
+}
+
 @media (min-width: 901px) {
+  html {
+    zoom: 1;
+  }
+
+  /* Cabeçalho superior */
   .topbar {
     height: 88px;
     min-height: 88px;
     padding: 8px 20px;
-    border-bottom-width: 4px;
   }
+
   .brand-wrap { gap: 12px; }
   .crest { width: 56px; height: 66px; }
-  .brand-small { font-size: 17px; line-height: 1.1; letter-spacing: .5px; }
-  .brand-state { font-size: 11px; line-height: 1.1; letter-spacing: 1px; }
-  .brand-title { font-size: 19px; line-height: 1.1; margin-top: 3px; }
+  .brand-small { font-size: 17px; }
+  .brand-state { font-size: 11px; }
+  .brand-title { font-size: 19px; }
   .brand-sub { font-size: 10px; }
   .top-actions { gap: 12px; }
   .system-label { font-size: 11px; }
-  .top-exit { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
+  .top-exit { padding: 8px 12px; font-size: 12px; }
 
+  /* Barra lateral */
   .admin-layout {
     grid-template-columns: 190px minmax(0, 1fr);
     min-height: calc(100vh - 88px);
   }
-  .sidebar { padding: 11px 8px; gap: 5px; }
-  .profile { gap: 8px; padding: 7px 5px 11px; margin-bottom: 3px; }
-  .profile img { width: 36px; height: 43px; }
-  .profile b { font-size: 12px; }
-  .profile span { font-size: 10px; }
-  .nav { padding: 10px 9px; font-size: 13px; line-height: 1.2; border-radius: 7px; }
 
-  .main-content { padding: 20px; }
-  .page-head { margin-bottom: 14px; gap: 12px; }
-  .page-head h1 { font-size: 25px; }
-  .page-head p { font-size: 12px; }
-  .toolbar { gap: 8px; margin-bottom: 10px; }
-  .toolbar input, .toolbar select { padding: 9px 11px; border-radius: 8px; font-size: 12px; }
-
-  /* Cartões de viaturas: altura menor e três indicadores alinhados. */
-  .vehicle-card.vehicle-row { margin-bottom: 8px; border-radius: 11px; }
-  .vehicle-main.vehicle-main-row {
-    padding: 10px 12px;
-    grid-template-columns: minmax(190px, 1fr) minmax(390px, 1.55fr) auto;
-    align-items: center;
-    gap: 10px;
+  .sidebar {
+    padding: 11px 8px;
+    gap: 5px;
   }
-  .vehicle-title.vehicle-title-row { padding-right: 8px; }
-  .vehicle-title.vehicle-title-row h3 { font-size: 20px; line-height: 1.15; margin-bottom: 4px; }
-  .vehicle-title.vehicle-title-row span { font-size: 12px; line-height: 1.25; }
-  .vehicle-title.vehicle-title-row small { font-size: 10px; margin-top: 3px; }
-  .vehicle-metrics.vehicle-metrics-row { grid-template-columns: repeat(3, minmax(95px, 1fr)); gap: 6px; }
-  .vehicle-metrics.vehicle-metrics-row > div { min-height: 58px; padding: 7px 8px; border-radius: 8px; }
-  .vehicle-metrics.vehicle-metrics-row span { font-size: 10px; gap: 4px; white-space: normal; }
-  .vehicle-metrics.vehicle-metrics-row strong { font-size: 18px; line-height: 1.15; margin-top: 3px; }
-  .vehicle-metrics.vehicle-metrics-row .vehicle-status-box strong { font-size: 13px; line-height: 1.2; white-space: normal; }
-  .metric-icon { font-size: 15px; }
-  .vehicle-actions.vehicle-actions-row { gap: 5px; }
-  .vehicle-actions.vehicle-actions-row button {
-    min-height: 38px;
-    padding: 6px 8px;
-    font-size: 11px;
-    gap: 4px;
+
+  .profile {
+    gap: 8px;
+    padding: 7px 5px 11px;
+    margin-bottom: 3px;
+  }
+
+  .profile img {
+    width: 36px;
+    height: 43px;
+  }
+
+  .nav {
+    padding: 10px 9px;
+    font-size: 13px;
     border-radius: 7px;
   }
-  .btn-icon { font-size: 16px; }
 
-  .admin-layout .primary,
-  .admin-layout .secondary,
-  .admin-layout .orange,
-  .admin-layout .danger-btn,
-  .admin-layout .edit-btn { font-size: 12px; }
+  /* Área principal */
+  .main-content { padding: 18px; }
+  .page-head { margin-bottom: 14px; }
+  .page-head h1 { font-size: 25px; }
+  .page-head p { font-size: 12px; }
+
+  .toolbar {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    padding: 9px 11px;
+    font-size: 12px;
+  }
+
+  /* Cada viatura ocupa uma linha compacta */
+  .vehicle-card.vehicle-row {
+    margin-bottom: 8px;
+    border-radius: 11px;
+  }
+
+  .vehicle-main.vehicle-main-row {
+    display: grid;
+    grid-template-columns: minmax(230px, 1.05fr) minmax(480px, 1.7fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+  }
+
+  /* Identificação da viatura */
+  .vehicle-title.vehicle-title-row {
+    min-width: 0;
+    padding-right: 8px;
+  }
+
+  .vehicle-title.vehicle-title-row h3 {
+    font-size: 19px;
+    line-height: 1.15;
+    margin: 0 0 4px;
+  }
+
+  .vehicle-title.vehicle-title-row span {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .vehicle-title.vehicle-title-row small {
+    font-size: 10px;
+    margin-top: 3px;
+  }
+
+  /* KM atual, próxima troca e situação lado a lado */
+  .vehicle-metrics.vehicle-metrics-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0;
+    min-width: 0;
+  }
+
+  .vehicle-metrics.vehicle-metrics-row > div {
+    min-width: 0;
+    min-height: 59px;
+    padding: 7px 9px;
+    border-radius: 8px;
+  }
+
+  .vehicle-metrics.vehicle-metrics-row span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
+  .vehicle-metrics.vehicle-metrics-row strong {
+    font-size: 17px;
+    line-height: 1.15;
+    margin-top: 4px;
+    white-space: normal;
+  }
+
+  .vehicle-metrics.vehicle-metrics-row .vehicle-status-box strong {
+    font-size: 13px;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  .metric-icon { font-size: 14px; }
+
+  /* Botões alinhados à direita na mesma linha */
+  .vehicle-actions.vehicle-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .vehicle-actions.vehicle-actions-row button {
+    min-height: 35px;
+    padding: 6px 8px;
+    font-size: 10px;
+    line-height: 1.1;
+    gap: 4px;
+    border-radius: 7px;
+    white-space: nowrap;
+  }
+
+  .btn-icon { font-size: 15px; }
 }
 
-/* Em telas intermediárias, mantém os botões em uma segunda linha sem apertar os dados. */
-@media (min-width: 901px) and (max-width: 1250px) {
+/* Em telas intermediárias, evita comprimir excessivamente os dados */
+@media (min-width: 901px) and (max-width: 1350px) {
   .vehicle-main.vehicle-main-row {
-    grid-template-columns: minmax(180px, .8fr) minmax(360px, 1.2fr);
+    grid-template-columns: minmax(200px, .9fr) minmax(390px, 1.4fr);
   }
-  .vehicle-actions.vehicle-actions-row { grid-column: 1 / -1; justify-content: flex-end; }
-  .vehicle-actions.vehicle-actions-row button { min-height: 36px; }
+
+  .vehicle-actions.vehicle-actions-row {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
 }
