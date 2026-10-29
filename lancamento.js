@@ -1,6 +1,6 @@
 'use strict';
 // Configure this URL after deploying the separate Cloudflare Worker.
-const API_BASE = 'CONFIGURE_URL_DO_WORKER';
+const API_BASE = 'https://controle-viaturas-lancamentos.03galassi.workers.dev';
 const TURNSTILE_SITE_KEY = 'CONFIGURE_TURNSTILE_SITE_KEY';
 const $ = id => document.getElementById(id);
 const form = $('entryForm'), statusBox = $('status'), vehicleSelect = $('vehicle'), submitBtn = $('submit');
