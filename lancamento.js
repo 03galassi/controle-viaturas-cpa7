@@ -1,7 +1,7 @@
 'use strict';
 // Configure this URL after deploying the separate Cloudflare Worker.
 const API_BASE = 'https://controle-viaturas-lancamentos.03galassi.workers.dev';
-const TURNSTILE_SITE_KEY = 'CONFIGURE_TURNSTILE_SITE_KEY';
+const TURNSTILE_SITE_KEY = '0x4AAAAAAFrlSJv_i05OjjYL';
 const $ = id => document.getElementById(id);
 const form = $('entryForm'), statusBox = $('status'), vehicleSelect = $('vehicle'), submitBtn = $('submit');
 const today = new Date(); $('date').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
