@@ -7,6 +7,7 @@ const KEY = 'cpa7_online_v10';
 const FIREBASE_CONFIG = {apiKey:"AIzaSyA2H-sd3gaBArqy6pE1pVcV-1Nz14N-dZE",authDomain:"controle-de-viaturas-cpa-7.firebaseapp.com",projectId:"controle-de-viaturas-cpa-7",storageBucket:"controle-de-viaturas-cpa-7.firebasestorage.app",messagingSenderId:"630650169264",appId:"1:630650169264:web:498aa0a12d48bcb3de9875",measurementId:"G-V4NC72LX2L"};
 const ADMIN_EMAIL = '03galassi@gmail.com';
 const TCARD_WORKER_URL = 'https://controle-viaturas-tcard-bridge.03galassi.workers.dev';
+const PUBLIC_MAINTENANCE_WORKER_URL = 'https://controle-viaturas-lancamentos.03galassi.workers.dev';
 const ALERT_KM = 1000;
 const CREST = 'assets/brasao_pmms.png';
 const MAINT_TYPES = ['Manutenção preventiva','Manutenção corretiva','Pneus','Bateria','Freios','Revisão','Outro'];
@@ -56,13 +57,44 @@ async function loadRemote(){
   if (snap.exists) applyData(snap.data());
   else { await stateRef().set(payload(s)); saveLocal(); }
 }
+async function loadPublicMaintenance(){
+  const user = auth?.currentUser;
+  if (!user) {
+    publicMaintenanceRecords = [];
+    return;
+  }
+
+  try {
+    const idToken = await user.getIdToken();
+    const response = await fetch(`${PUBLIC_MAINTENANCE_WORKER_URL}/maintenance`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${idToken}` }
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || `Erro ao consultar histórico (HTTP ${response.status}).`);
+    }
+
+    if (!auth.currentUser || auth.currentUser.uid !== user.uid) return;
+
+    publicMaintenanceRecords = Array.isArray(data.records)
+      ? data.records.map(record => ({ ...record, id: String(record.id) }))
+      : [];
+
+    refresh();
+  } catch (err) {
+    console.error('Erro ao carregar histórico público:', err);
+  }
+}
+
 function subscribeRemote(){
   if (stateUnsubscribe) stateUnsubscribe();
   if (publicMaintenanceUnsubscribe) publicMaintenanceUnsubscribe();
-  publicMaintenanceUnsubscribe = db.collection('publicMaintenance').onSnapshot(snapshot => {
-    publicMaintenanceRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    refresh();
-  }, err => { console.error('Public maintenance sync:', err); });
+  publicMaintenanceUnsubscribe = null;
+  loadPublicMaintenance();
+
   stateUnsubscribe = stateRef().onSnapshot(snap => {
     if (!snap.exists || snap.metadata.hasPendingWrites) return;
     applyData(snap.data());
@@ -276,6 +308,8 @@ async function resetPassword(){
 async function logout(){
   s.session = null; saveLocal();
   if (stateUnsubscribe) { stateUnsubscribe(); stateUnsubscribe = null; }
+  publicMaintenanceRecords = [];
+  publicMaintenanceUnsubscribe = null;
   closeModal(true);
   try { if (firebaseReady) await auth.signOut(); } catch(err) { console.error(err); }
   login();
