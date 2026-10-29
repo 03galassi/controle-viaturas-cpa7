@@ -41,7 +41,9 @@ function applyData(d){ Object.assign(s, normalize(d)); saveLocal(); }
 const ui = { page: 'dashboard', vehQuery: '', vehUnit: '', maintVehicle: '', maintQuery: '', histMine: false };
 
 /* ---------- Firebase ---------- */
-let firebaseReady = false, stateUnsubscribe = null, auth, db, secondaryApp;
+let firebaseReady = false, stateUnsubscribe = null, publicMaintenanceUnsubscribe = null, auth, db, secondaryApp;
+let publicMaintenanceRecords = [];
+const allMaintenance = () => { const ids = new Set(s.maintenance.map(m => m.id)); return s.maintenance.concat(publicMaintenanceRecords.filter(m => !ids.has(m.id))); };
 try {
   firebase.initializeApp(FIREBASE_CONFIG);
   auth = firebase.auth(); db = firebase.firestore(); firebaseReady = true;
@@ -56,6 +58,11 @@ async function loadRemote(){
 }
 function subscribeRemote(){
   if (stateUnsubscribe) stateUnsubscribe();
+  if (publicMaintenanceUnsubscribe) publicMaintenanceUnsubscribe();
+  publicMaintenanceUnsubscribe = db.collection('publicMaintenance').onSnapshot(snapshot => {
+    publicMaintenanceRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    refresh();
+  }, err => { console.error('Public maintenance sync:', err); });
   stateUnsubscribe = stateRef().onSnapshot(snap => {
     if (!snap.exists || snap.metadata.hasPendingWrites) return;
     applyData(snap.data());
@@ -589,10 +596,11 @@ function delDriver(id){
 }
 
 function maintRow(m, canDelete){
+  const isPublicRecord = m.source === 'Lançamento público' || m.publicRecord === true;
   const v = findV(m.vehicle);
   const value = m.value ? money(m.value) : '—';
   const oil = m.type === 'Troca de óleo';
-  return `<div class="list-card maint-row"><div class="lc-main"><span class="avatar ${oil ? 'oil' : ''}">${ic(oil ? 'drop' : 'wrench')}</span><div><b>${esc(v?.prefix || m.prefix || 'Viatura removida')} · ${esc(m.type)}</b><span>${esc(fmtDate(m.date))} · KM ${kmfmt(m.km)}${v ? ' · ' + esc(v.unit) : ''}</span>${m.desc ? `<span>${esc(m.desc)}</span>` : ''}<small>${esc(m.source || '')}</small></div></div><div class="maint-side"><strong>${value}</strong>${canDelete ? `<button class="danger-btn small" onclick="delMaint('${m.id}')">Excluir</button>` : ''}</div></div>`;
+  return `<div class="list-card maint-row"><div class="lc-main"><span class="avatar ${oil ? 'oil' : ''}">${ic(oil ? 'drop' : 'wrench')}</span><div><b>${esc(v?.prefix || m.prefix || 'Viatura removida')} · ${esc(m.type)}</b><span>${esc(fmtDate(m.date))} · KM ${kmfmt(m.km)}${v ? ' · ' + esc(v.unit) : ''}</span>${m.desc ? `<span>${esc(m.desc)}</span>` : ''}<small>${esc(m.source || '')}</small></div></div><div class="maint-side"><strong>${value}</strong>${canDelete && !isPublicRecord ? `<button class="danger-btn small" onclick="delMaint('${m.id}')">Excluir</button>` : ''}</div></div>`;
 }
 function maint(){
   if (ui.maintVehicle && !findV(ui.maintVehicle)) ui.maintVehicle = '';
@@ -603,7 +611,7 @@ function maint(){
 }
 function maintList(){
   const q = ui.maintQuery.trim().toLowerCase();
-  const list = s.maintenance.slice().reverse().filter(m => (!ui.maintVehicle || m.vehicle === ui.maintVehicle) && `${m.type} ${m.desc} ${m.source} ${findV(m.vehicle)?.prefix || m.prefix || ''}`.toLowerCase().includes(q));
+  const list = allMaintenance().slice().reverse().filter(m => (!ui.maintVehicle || m.vehicle === ui.maintVehicle) && `${m.type} ${m.desc} ${m.source} ${findV(m.vehicle)?.prefix || m.prefix || ''}`.toLowerCase().includes(q));
   const total = list.reduce((a, m) => a + (Number(m.value) || 0), 0);
   $('maintList').innerHTML = `<div class="list-count">${list.length} registro(s) · Total: <b>${money(total)}</b></div><div class="cards-list">${list.map(m => maintRow(m, true)).join('') || '<div class="empty-card">Nenhuma manutenção registrada.</div>'}</div>`;
 }
@@ -681,7 +689,7 @@ function driverVehicle(v){
 }
 function driverHistory(){
   const d = me(); if (!d) { logout(); return false; }
-  const list = s.maintenance.slice().reverse().filter(m => !ui.histMine || m.driverId === d.id || m.source === `Motorista: ${d.name}`);
+  const list = allMaintenance().slice().reverse().filter(m => !ui.histMine || m.driverId === d.id || m.source === `Motorista: ${d.name}`);
   $('driverContent').innerHTML = `<div class="driver-page-head"><div><h1>Histórico</h1><p>Trocas de óleo e manutenções registradas.</p></div></div>
  <div class="toolbar"><select onchange="ui.histMine=this.value==='1';driverHistory()"><option value="0">Todos os lançamentos</option><option value="1" ${ui.histMine ? 'selected' : ''}>Somente os meus</option></select></div>
  <div class="cards-list history-panel">${list.map(m => maintRow(m, false)).join('') || '<div class="empty-card">Nenhum lançamento registrado.</div>'}</div>`;

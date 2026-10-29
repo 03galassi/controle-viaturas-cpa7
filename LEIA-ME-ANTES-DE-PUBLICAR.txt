@@ -1,0 +1,41 @@
+CONTROLE DE VIATURAS CPA-7 — INTEGRAÇÃO PÚBLICA (PACOTE DE TESTES)
+
+ESTE PACOTE NÃO ESTÁ PUBLICADO. Não sobrescreve os arquivos do repositório automaticamente.
+Contém uma cópia dos arquivos atuais e a integração isolada para revisão/testes.
+
+ARQUIVOS NOVOS/ALTERADOS
+- lancamento.html, lancamento.js, lancamento.css: formulário público.
+- worker-lancamentos-publicos.js: Worker independente.
+- app.js: cópia com leitura adicional da coleção publicMaintenance e combinação com o histórico existente.
+- TRECHO_REGRAS_FIRESTORE.txt: regra de leitura autenticada e bloqueio de escrita direta.
+
+CONFIGURAÇÃO DO WORKER
+Variables:
+  FIREBASE_PROJECT_ID = controle-de-viaturas-cpa-7
+  ALLOWED_ORIGIN = https://03galassi.github.io
+Secrets:
+  FIREBASE_SERVICE_ACCOUNT_JSON = conteúdo JSON da conta exclusiva viaturas-lancamentos-publicos
+  TURNSTILE_SECRET_KEY = Secret key do widget Turnstile
+
+A conta de serviço atualmente tem papel Leitor do Cloud Datastore. Isso permite consultar app/state, mas NÃO permite gravar publicMaintenance. Para testar gravação, será necessário atribuir à conta o papel predefinido Cloud Datastore User (roles/datastore.user). ATENÇÃO: esse papel é amplo no projeto; não é limitado a uma coleção. O Worker foi programado para escrever somente em publicMaintenance, mas IAM não restringe esse papel a uma coleção. Avalie esse risco antes de conceder e antes de produção. Alternativa mais isolada: mover os lançamentos públicos para um projeto Firebase separado e integrar a leitura desse projeto ao app autenticado.
+
+TURNSTILE
+- No lancamento.js, substituir CONFIGURE_TURNSTILE_SITE_KEY pela Site key pública do widget.
+- Configurar a URL do Worker em API_BASE, por exemplo https://NOME-DO-WORKER.SUBDOMINIO.workers.dev (usar a URL exata mostrada na Cloudflare).
+- O formulário envia o token e o Worker valida com TURNSTILE_SECRET_KEY.
+
+FIRESTORE RULES
+- Mesclar TRECHO_REGRAS_FIRESTORE.txt dentro do match /databases/{database}/documents existente. Não substituir o conjunto completo de regras.
+- O app autenticado lê publicMaintenance; escritas diretas via cliente ficam bloqueadas. O Worker usa OAuth/IAM e não é limitado pelas Security Rules.
+
+COMPORTAMENTO
+- O formulário permite escolher viatura, data e tipo (Troca de óleo ou Manutenção preventiva).
+- A quilometragem é copiada do cadastro no momento do lançamento, mas não atualiza a quilometragem da viatura nem indicadores de troca.
+- O Worker valida a origem CORS, Turnstile, data não futura, tipo e viatura cadastrada.
+- A coleção publicMaintenance é separada do documento app/state; o app.js desta pasta combina os registros para exibição no histórico.
+
+IMPORTANTE
+- Não publique até configurar URL e Site key, revisar regras e decidir conscientemente sobre a permissão de escrita IAM.
+- A chave JSON fica somente como Secret na Cloudflare; nunca a envie ao GitHub ou a conversas.
+- CORS não é autenticação. Turnstile e limites de taxa são necessários para reduzir abuso.
+- Teste primeiro em ambiente de teste. A conta de serviço com roles/datastore.user terá acesso amplo ao Firestore do projeto; o código do Worker é uma restrição de aplicação, não uma barreira IAM por coleção.

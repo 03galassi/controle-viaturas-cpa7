@@ -1,0 +1,8 @@
+// Acrescente dentro do match /databases/{database}/documents existente.
+// Não substitua as regras atuais do projeto.
+match /publicMaintenance/{recordId} {
+  // O aplicativo autenticado pode ler os registros para exibi-los no histórico.
+  allow read: if request.auth != null;
+  // Escritas públicas diretas ficam bloqueadas. O Worker grava usando OAuth/IAM.
+  allow create, update, delete: if false;
+}

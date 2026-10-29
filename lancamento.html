@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a2342"><title>Lançamento de serviço — CPA-7</title>
+<link rel="stylesheet" href="lancamento.css">
+</head>
+<body>
+<main class="wrap">
+  <header><div class="mark">CPA-7</div><div><h1>Lançamento de serviço</h1><p>Controle de Viaturas</p></div></header>
+  <section class="panel">
+    <p class="intro">Selecione a viatura e registre a troca de óleo ou uma manutenção. A quilometragem e os demais dados são obtidos do sistema.</p>
+    <div id="status" class="status" role="status">Carregando viaturas…</div>
+    <form id="entryForm" hidden>
+      <label for="vehicle">Viatura</label><select id="vehicle" required><option value="">Selecione a viatura</option></select>
+      <label for="date">Data do serviço</label><input id="date" type="date" required>
+      <fieldset><legend>Tipo de lançamento</legend>
+        <label class="choice"><input type="radio" name="type" value="Troca de óleo" checked><span>🛢️ Troca de óleo</span></label>
+        <label class="choice"><input type="radio" name="type" value="Manutenção preventiva"><span>🔧 Manutenção</span></label>
+      </fieldset>
+      <div id="turnstile-container" class="full"></div>
+      <button id="submit" type="submit">Registrar lançamento</button>
+    </form>
+    <div id="result" class="result" hidden></div>
+  </section>
+  <footer>CPA-7 · Registro simplificado de serviços</footer>
+</main>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<script src="lancamento.js"></script>
+</body></html>
