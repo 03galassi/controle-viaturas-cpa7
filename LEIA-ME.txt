@@ -1,0 +1,19 @@
+INSTALAÇÃO DO ÍCONE — LANÇAMENTO DE SERVIÇO CPA-7
+
+Envie os arquivos mantendo esta estrutura no mesmo repositório:
+
+lancamento.html
+manifest.webmanifest
+lancamento.css        (arquivo atual, não substituir)
+lancamento.js         (arquivo atual, não substituir)
+assets/icone-lancamento-192.png
+assets/icone-lancamento-512.png
+assets/apple-touch-icon.png
+assets/icone-lancamento.png
+
+O lancamento.html deste pacote já contém os links para o favicon, o ícone do iPhone/iPad e o manifesto.
+Não apague nem substitua lancamento.css ou lancamento.js.
+
+Depois de publicar, abra https://03galassi.github.io/controle-viaturas-cpa7/lancamento.html
+no celular e use “Adicionar à tela inicial”. Se o atalho antigo continuar com o ícone anterior,
+remova o atalho antigo e adicione novamente após atualizar a página.

@@ -1,0 +1,13 @@
+{
+  "name": "Lançamento de Serviço — CPA-7",
+  "short_name": "Lançamento CPA-7",
+  "start_url": "./lancamento.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a2342",
+  "theme_color": "#0a2342",
+  "icons": [
+    { "src": "assets/icone-lancamento-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icone-lancamento-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
