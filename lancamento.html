@@ -1,57 +1,34 @@
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0a2342">
-<title>Lançamento de serviço — CPA-7</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a2342"><title>Lançamento de serviço — CPA-7</title>
 <link rel="stylesheet" href="lancamento.css">
 </head>
 <body>
 <main class="wrap">
-  <header>
-    <div class="mark">CPA-7</div>
-    <div><h1>Lançamento de serviço</h1><p>Controle de Viaturas</p></div>
-  </header>
+  <header><div class="mark">CPA-7</div><div><h1>Lançamento de serviço</h1><p>Controle de Viaturas</p></div></header>
   <section class="panel">
-    <p class="intro">Selecione a viatura e registre a troca de óleo ou uma manutenção.</p>
+    <p class="intro">Selecione a viatura e registre a troca de óleo ou uma manutenção. A quilometragem e os demais dados são obtidos do sistema.</p>
     <div id="status" class="status" role="status">Carregando viaturas…</div>
     <form id="entryForm" hidden>
-      <label for="vehicle">Viatura</label>
-      <select id="vehicle" required><option value="">Selecione a viatura</option></select>
-
-      <label for="date">Data do serviço</label>
-      <input id="date" type="date" required>
-
-      <fieldset>
-        <legend>Tipo de lançamento</legend>
+      <label for="vehicle">Viatura</label><select id="vehicle" required><option value="">Selecione a viatura</option></select>
+      <label for="date">Data do serviço</label><input id="date" type="date" required>
+      <fieldset><legend>Tipo de lançamento</legend>
         <label class="choice"><input type="radio" name="type" value="Troca de óleo" checked><span>🛢️ Troca de óleo</span></label>
         <label class="choice"><input type="radio" name="type" value="Manutenção preventiva"><span>🔧 Manutenção</span></label>
       </fieldset>
-
-      <div id="maintenance-fields" hidden>
-        <label for="km">Quilometragem (KM)</label>
-        <input id="km" type="number" min="0" step="1" inputmode="numeric">
-
-        <label for="maintenance-type">Tipo de manutenção</label>
-        <select id="maintenance-type">
-          <option value="Manutenção preventiva">Manutenção preventiva</option>
-          <option value="Manutenção corretiva">Manutenção corretiva</option>
-          <option value="Pneus">Pneus</option>
-          <option value="Bateria">Bateria</option>
-          <option value="Freios">Freios</option>
-          <option value="Revisão">Revisão</option>
-          <option value="Outro">Outro</option>
-        </select>
-
-        <label for="value">Valor (R$), se houver</label>
-        <input id="value" type="number" min="0" step="0.01" inputmode="decimal">
-
-        <label for="desc">Descrição do serviço</label>
-        <textarea id="desc" rows="4" maxlength="500"></textarea>
+      <div id="oil-km-wrap" hidden>
+        <label for="oil-km">KM do hodômetro na troca de óleo</label>
+        <input id="oil-km" type="number" min="0" step="1" inputmode="numeric" placeholder="Informe o KM atual">
       </div>
-
+      <div id="maintenance-fields" hidden>
+        <label for="km">KM do hodômetro</label><input id="km" type="number" min="0" step="1" inputmode="numeric">
+        <label for="maintenance-type">Tipo de manutenção</label>
+        <select id="maintenance-type"><option value="Manutenção preventiva">Manutenção preventiva</option><option value="Manutenção corretiva">Manutenção corretiva</option><option value="Pneus">Pneus</option><option value="Bateria">Bateria</option><option value="Freios">Freios</option><option value="Revisão">Revisão</option><option value="Outro">Outro</option></select>
+        <label for="value">Valor (R$)</label><input id="value" type="number" min="0" step="0.01" value="0">
+        <label for="desc">Descrição</label><textarea id="desc" maxlength="500" rows="3"></textarea>
+      </div>
       <div id="turnstile-container" class="full"></div>
       <button id="submit" type="submit">Registrar lançamento</button>
     </form>
@@ -61,5 +38,4 @@
 </main>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <script src="lancamento.js"></script>
-</body>
-</html>
+</body></html>

@@ -24,7 +24,7 @@ function normalize(d){
 }
 function fixVehicle(v){
   const x = {...v};
-  x.km = num(x.km); x.last = num(x.last); x.interval = num(x.interval) || 5000;
+  x.km = num(x.km); x.last = num(x.last); x.interval = num(x.interval) || 5000; x.intervalMonths = Math.max(1, num(x.intervalMonths) || 6);
   x.next = Number.isFinite(Number(x.next)) && x.next !== '' && x.next != null ? num(x.next) : x.last + x.interval;
   return x;
 }
@@ -83,6 +83,25 @@ async function loadPublicMaintenance(){
       ? data.records.map(record => ({ ...record, id: String(record.id) }))
       : [];
 
+    // Sincroniza trocas públicas com os campos de controle, sem duplicar histórico.
+    const oils = publicMaintenanceRecords.filter(r => r.type === 'Troca de óleo' && Number(r.km) > 0);
+    if (oils.length) {
+      await db.runTransaction(async t => {
+        const snap = await t.get(stateRef()); if (!snap.exists) return;
+        const fresh = normalize(snap.data()); let changed = false;
+        for (const r of oils) {
+          const v = fresh.vehicles.find(x => String(x.id) === String(r.vehicle));
+          if (!v) continue;
+          const stamp = `${r.date}|${r.km}|${r.id}`;
+          if (v.lastPublicOilRecord === stamp) continue;
+          if (!v.oilDate || String(r.date) >= String(v.oilDate)) {
+            v.km = Math.max(num(v.km), num(r.km)); v.last = num(r.km); v.next = num(r.km) + num(v.interval || 5000); v.oilDate = r.date; v.lastPublicOilRecord = stamp; changed = true;
+          }
+        }
+        if (changed) t.set(stateRef(), payload(fresh));
+      });
+      await loadRemote();
+    }
     refresh();
   } catch (err) {
     console.error('Erro ao carregar histórico público:', err);
@@ -141,11 +160,23 @@ function fmtDate(d){ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''); return
 const findV = id => s.vehicles.find(v => v.id === id);
 const findUnit = id => s.units.find(u => u.id === id);
 const me = () => s.drivers.find(x => x.id === s.session?.driverId);
+function addMonths(dateStr, months){
+  if (!dateStr) return '';
+  const [y,m,d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return '';
+  const target = new Date(y, m - 1 + Number(months || 0), 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth()+1, 0).getDate();
+  target.setDate(Math.min(d, lastDay));
+  return `${target.getFullYear()}-${String(target.getMonth()+1).padStart(2,'0')}-${String(target.getDate()).padStart(2,'0')}`;
+}
+function daysUntil(dateStr){ if(!dateStr) return null; const a=new Date(today()+'T00:00:00'), b=new Date(dateStr+'T00:00:00'); return Math.ceil((b-a)/86400000); }
 function vstate(v){
   const rem = v.next - v.km;
-  if (rem < 0) return {rem, key:'overdue', label:`Vencida há ${kmfmt(-rem)} km`};
-  if (rem < ALERT_KM) return {rem, key:'alert', label:`Faltam ${kmfmt(rem)} km`};
-  return {rem, key:'ok', label:'Em dia'};
+  const dateDue = addMonths(v.oilDate, v.intervalMonths || 6);
+  const days = daysUntil(dateDue);
+  if (rem < 0 || (days !== null && days < 0)) return {rem, days, dateDue, key:'overdue', label: rem < 0 ? `Vencida há ${kmfmt(-rem)} km` : `Prazo vencido em ${fmtDate(dateDue)}`};
+  if (rem < ALERT_KM || (days !== null && days <= 30)) return {rem, days, dateDue, key:'alert', label: rem < ALERT_KM ? `Faltam ${kmfmt(rem)} km` : `Vence em ${days} dia(s)`};
+  return {rem, days, dateDue, key:'ok', label:'Em dia'};
 }
 const sortV = arr => arr.slice().sort((a,b) => String(a.unit).localeCompare(String(b.unit),'pt-BR') || String(a.prefix).localeCompare(String(b.prefix),'pt-BR',{numeric:true}));
 
@@ -191,6 +222,7 @@ function toast(msg, type='ok'){
 /* ---------- Modal ---------- */
 let pendingRefresh = false;
 function modal(title, html){
+  if (!document.getElementById('cpa7-modal-fix')) { const st=document.createElement('style'); st.id='cpa7-modal-fix'; st.textContent='.modal-backdrop{padding:12px;overflow:auto;align-items:flex-start}.modal{width:min(720px,100%);max-height:calc(100dvh - 24px);overflow:auto;margin:auto}.modal-head{position:sticky;top:0;z-index:2;background:inherit}.modal .form-grid{min-width:0}.modal label,.modal input,.modal select,.modal textarea{min-width:0;max-width:100%;box-sizing:border-box}.modal-actions{position:sticky;bottom:0;background:inherit;padding-top:10px}'; document.head.appendChild(st); }
   closeModal(true);
   const wrap = document.createElement('div'); wrap.className = 'modal-backdrop';
   wrap.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><div><small>PMMS • CPA-7</small><h2>${esc(title)}</h2></div><button type="button" class="close" aria-label="Fechar" onclick="closeModal()">×</button></div>${html}</div>`;
@@ -497,7 +529,8 @@ function vehicleForm(editId){
  <label>KM atual<input name="km" type="number" inputmode="numeric" min="0" required value="${v?.km ?? ''}"></label>
  <label>KM da última troca de óleo<input name="last" type="number" inputmode="numeric" min="0" required value="${v?.last ?? ''}"></label>
  <label>Intervalo da troca de óleo<select name="interval">${intervals.map(i => `<option value="${i}" ${i === cur ? 'selected' : ''}>${kmfmt(i)} km</option>`).join('')}</select></label>
- <label>Data da última troca<input name="oilDate" type="date" max="${today()}" value="${esc(v?.oilDate || '')}"></label>
+ <label>Validade da troca de óleo (meses)<input name="intervalMonths" type="number" min="1" max="36" required value="${v?.intervalMonths || 6}"></label>
+  <label>Data da última troca<input name="oilDate" type="date" max="${today()}" value="${esc(v?.oilDate || '')}"></label>
  <label class="full">Observações<textarea name="notes" rows="3">${esc(v?.notes || '')}</textarea></label>
  <div class="modal-actions full">${v ? `<button type="button" class="danger-btn push-left" onclick="delVehicle('${v.id}')">Excluir viatura</button>` : ''}<button type="button" class="secondary" onclick="closeModal()">Cancelar</button><button class="primary" type="submit">Salvar viatura</button></div>
  </form>`);
@@ -510,7 +543,8 @@ function vehicleForm(editId){
     if (km < last) return formError(e.target, 'O KM atual não pode ser menor que o KM da última troca.');
     if (s.vehicles.some(x => x.id !== editId && x.prefix.toLowerCase() === prefix.toLowerCase())) return formError(e.target, 'Já existe uma viatura com este prefixo.');
     if (s.vehicles.some(x => x.id !== editId && String(x.plate).toUpperCase() === plate)) return formError(e.target, 'Já existe uma viatura com esta placa.');
-    const obj = {id: v?.id || uid(), unit: f.get('unit'), prefix, plate, brand: String(f.get('brand')).trim(), model: String(f.get('model')).trim(), year: f.get('year'), color: String(f.get('color')).trim(), km, interval, last, next: last + interval, oilDate: f.get('oilDate'), notes: String(f.get('notes')).trim()};
+    const intervalMonths = Math.max(1, Math.min(36, Number(f.get('intervalMonths')) || 6));
+     const obj = {id: v?.id || uid(), unit: f.get('unit'), prefix, plate, brand: String(f.get('brand')).trim(), model: String(f.get('model')).trim(), year: f.get('year'), color: String(f.get('color')).trim(), km, interval, intervalMonths, last, next: last + interval, oilDate: f.get('oilDate'), notes: String(f.get('notes')).trim()};
     closeModal();
     commit(st => {
       const x = st.vehicles.find(y => y.id === obj.id);

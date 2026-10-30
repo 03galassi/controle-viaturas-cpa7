@@ -281,3 +281,6 @@ button.stat:hover{border-color:#a8c8ee}
 
 /* Escala padrão de 90% no computador (equivale ao zoom 90% do navegador) */
 @media(min-width:901px){:root{--z:.9}html{zoom:var(--z)}}
+
+/* Ajuste responsivo das caixas de diálogo CPA-7 */
+.modal-backdrop{padding:12px;overflow:auto;align-items:flex-start}.modal{width:min(720px,100%);max-height:calc(100dvh - 24px);overflow:auto;margin:auto}.modal-head{position:sticky;top:0;z-index:2}.modal .form-grid{min-width:0}.modal label,.modal input,.modal select,.modal textarea{min-width:0;max-width:100%;box-sizing:border-box}.modal-actions{position:sticky;bottom:0;padding-top:10px}
