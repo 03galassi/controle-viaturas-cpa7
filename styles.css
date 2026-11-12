@@ -96,6 +96,20 @@ button.stat:hover{border-color:#a8c8ee}
 .mini-card div span{color:var(--muted);font-size:13px}
 .mini-card .chip{flex:none}.mini-card>button{padding:8px 12px;font-size:13px;white-space:nowrap}
 
+/* Painel inicial: quadro único de placas com descrição e cor por situação do óleo */
+.fleet-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.fleet-tile{min-width:0;min-height:78px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;padding:10px 12px;border:2px solid;border-radius:13px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fleet-tile.ok{background:#e1f6e8;border-color:#48b95f;color:#123b22}
+.fleet-tile.alert{background:#fff1c7;border-color:#efa900;color:#573900}
+.fleet-tile.overdue{background:#ffe1e3;border-color:#ed4149;color:#65151b}
+.fleet-plate{font:800 20px/1.1 ui-monospace,"SF Mono",Consolas,monospace;letter-spacing:.04em;color:#101820}
+.fleet-description{font-size:13px;line-height:1.2;font-weight:650;color:#26384b;overflow-wrap:anywhere}
+.fleet-legend{display:flex;justify-content:center;align-items:center;gap:14px 30px;flex-wrap:wrap;margin-top:14px;padding:15px 18px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);color:var(--muted);font-size:14px}
+.fleet-legend span{display:inline-flex;align-items:center;gap:8px}.fleet-legend b{color:var(--ink);font-size:16px}
+.fleet-dot{width:15px;height:15px;border-radius:5px;display:inline-block;flex:none}.fleet-dot.ok{background:#16a34a}.fleet-dot.alert{background:#f2ad00}.fleet-dot.overdue{background:#e52f39}
+.fleet-empty{grid-column:1/-1;text-align:center;padding:30px}
+@media(max-width:600px){.fleet-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:10px}.fleet-tile{min-height:70px;padding:8px 5px}.fleet-plate{font-size:16px}.fleet-description{font-size:11.5px}.fleet-legend{justify-content:flex-start;gap:10px 16px;padding:12px;font-size:12px}}
+
 /* ===== Chips e medidor ===== */
 .chip{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:99px;font-weight:700;font-size:12.5px;background:var(--green-soft);color:var(--green-ink);white-space:nowrap}
 .chip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}

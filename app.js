@@ -379,29 +379,26 @@ function adminMore(){
 }
 
 function dashboard(){
-  const alerts = sortV(s.vehicles.filter(v => vstate(v).key !== 'ok')).sort((a,b) => (a.next-a.km) - (b.next-b.km));
-  const overdue = alerts.filter(v => vstate(v).key === 'overdue'), nAlert = alerts.length - overdue.length;
-  const total = s.vehicles.length, nOk = total - alerts.length, pc = n => total ? (n / total * 100).toFixed(2) : 0;
+  const vehicles = sortV(s.vehicles);
+  const counts = {ok:0, alert:0, overdue:0};
+  vehicles.forEach(v => counts[vstate(v).key]++);
   const dateTxt = new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'});
-  $('content').innerHTML = `<div class="page-head"><div><h1>Painel</h1><p>${esc(dateTxt.charAt(0).toUpperCase() + dateTxt.slice(1))} · visão geral da frota do CPA-7</p></div><div class="head-actions"><button class="secondary" onclick="fleetReport()">${ic('file')} Relatório da frota</button><button class="primary" onclick="vehicleForm()">${ic('plus')} Nova viatura</button></div></div>
- <div class="stats">
-  <button class="stat" onclick="go('units')"><span class="stat-ico">${ic('building')}</span><div><span>Unidades</span><strong>${s.units.length}</strong></div></button>
-  <button class="stat" onclick="ui.vehUnit='';ui.vehQuery='';go('vehicles')"><span class="stat-ico green">${ic('car')}</span><div><span>Viaturas</span><strong>${total}</strong></div></button>
-  <div class="stat"><span class="stat-ico amber">${ic('alert')}</span><div><span>Em alerta</span><strong>${nAlert}</strong></div></div>
-  <div class="stat"><span class="stat-ico red">${ic('drop')}</span><div><span>Troca vencida</span><strong>${overdue.length}</strong></div></div>
- </div>
- <div class="health"><div class="health-top"><h2>Situação da troca de óleo</h2><span>${total ? Math.round(nOk / total * 100) : 0}% da frota em dia</span></div>
-  <div class="seg" role="img" aria-label="${nOk} em dia, ${nAlert} em alerta, ${overdue.length} vencidas">${total ? `<i class="s-ok" style="width:${pc(nOk)}%"></i><i class="s-alert" style="width:${pc(nAlert)}%"></i><i class="s-overdue" style="width:${pc(overdue.length)}%"></i>` : ''}</div>
-  <div class="legend"><span><i class="dot"></i><b>${nOk}</b> em dia</span><span><i class="dot alert"></i><b>${nAlert}</b> em alerta (menos de ${kmfmt(ALERT_KM)} km)</span><span><i class="dot overdue"></i><b>${overdue.length}</b> vencidas</span></div></div>
- <div class="dash-cols">
-  <section><div class="section-title"><h2>Viaturas por unidade</h2><button class="secondary" onclick="go('units')">Gerenciar</button></div>
-  <div class="unit-grid">${s.units.map(u => {
-    const vs = s.vehicles.filter(v => v.unit === u.name), ac = vs.filter(v => vstate(v).key !== 'ok').length;
-    return `<article class="unit-card"><div><h3>${esc(u.name)}</h3><span>${vs.length} viatura(s)</span></div>${ac ? `<span class="chip alert">${ac} alerta(s)</span>` : '<span class="chip">Em dia</span>'}<button onclick="openUnitVehicles('${u.id}')">Ver ${ic('arrow')}</button></article>`;
-  }).join('') || `<div class="empty-card">Cadastre uma unidade para começar.<br><br><button class="primary" onclick="unitForm()">${ic('plus')} Nova unidade</button></div>`}</div></section>
-  <section><div class="section-title"><h2>Trocas de óleo a fazer</h2></div>
-  <div class="alert-list">${alerts.map(vehicleMini).join('') || '<div class="empty-card">Nenhuma viatura precisa de troca de óleo agora.</div>'}</div></section>
- </div>`;
+  $('content').innerHTML = `<div class="page-head"><div><h1>Painel inicial</h1><p>${esc(dateTxt.charAt(0).toUpperCase() + dateTxt.slice(1))} · situação da frota do CPA-7</p></div><div class="head-actions"><button class="secondary" onclick="fleetReport()">${ic('file')} Relatório da frota</button><button class="primary" onclick="vehicleForm()">${ic('plus')} Nova viatura</button></div></div>
+  <section class="fleet-board" aria-label="Viaturas e situação da troca de óleo">
+    ${vehicles.map(v => {
+      const status = vstate(v).key;
+      const description = [v.model, v.unit].filter(Boolean).join(' · ');
+      return `<article class="fleet-tile ${status}" title="${esc(v.prefix)} · ${esc(description)}">
+        <strong class="fleet-plate">${esc(v.plate || v.prefix || 'SEM PLACA')}</strong>
+        <span class="fleet-description">${esc(description || v.prefix || 'Viatura sem descrição')}</span>
+      </article>`;
+    }).join('') || `<div class="empty-card fleet-empty">Nenhuma viatura cadastrada.<br><br><button class="primary" onclick="vehicleForm()">${ic('plus')} Cadastrar viatura</button></div>`}
+  </section>
+  <div class="fleet-legend" aria-label="Legenda da situação da troca de óleo">
+    <span><i class="fleet-dot ok"></i><b>${counts.ok}</b> Em dia</span>
+    <span><i class="fleet-dot alert"></i><b>${counts.alert}</b> Próximo do vencimento</span>
+    <span><i class="fleet-dot overdue"></i><b>${counts.overdue}</b> Vencido</span>
+  </div>`;
 }
 function vehicleMini(v){
   const st = vstate(v);
