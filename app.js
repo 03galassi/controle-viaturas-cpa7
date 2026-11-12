@@ -669,7 +669,7 @@ function maintRow(m, canDelete){
   const v = findV(m.vehicle);
   const value = m.value ? money(m.value) : '—';
   const oil = m.type === 'Troca de óleo';
-  return `<div class="list-card maint-row"><div class="lc-main"><span class="avatar ${oil ? 'oil' : ''}">${ic(oil ? 'drop' : 'wrench')}</span><div><b>${esc(v?.prefix || m.prefix || 'Viatura removida')} · ${esc(m.type)}</b><span>${esc(fmtDate(m.date))} · KM ${kmfmt(m.km)}${v ? ' · ' + esc(v.unit) : ''}</span>${m.desc ? `<span>${esc(m.desc)}</span>` : ''}<small>${esc(m.source || '')}</small></div></div><div class="maint-side"><strong>${value}</strong>${canDelete && !isPublicRecord ? `<button class="danger-btn small" onclick="delMaint('${m.id}')">Excluir</button>` : ''}</div></div>`;
+  return `<div class="list-card maint-row"><div class="lc-main"><span class="avatar ${oil ? 'oil' : ''}">${ic(oil ? 'drop' : 'wrench')}</span><div><b>${esc(v?.prefix || m.prefix || 'Viatura removida')} · ${esc(m.type)}</b><span>${esc(fmtDate(m.date))} · KM ${kmfmt(m.km)}${v ? ' · ' + esc(v.unit) : ''}</span>${m.desc ? `<span>${esc(m.desc)}</span>` : ''}<small>${esc(m.source || '')}</small></div></div><div class="maint-side"><strong>${value}</strong>${canDelete && !isPublicRecord ? `<button class="danger-btn small maint-delete-btn" onclick="delMaint('${m.id}')" title="Excluir este lançamento">Excluir lançamento</button>` : isPublicRecord ? `<span class="muted-note" title="Exclusão indisponível nesta tela">Registro público</span>` : ''}</div></div>`;
 }
 function historyVehicle(id){
   const v = findV(id);
@@ -693,7 +693,16 @@ function maintList(){
   $('maintList').innerHTML = `<div class="list-count">${list.length} registro(s) · Total: <b>${money(total)}</b></div><div class="cards-list">${list.map(m => maintRow(m, true)).join('') || '<div class="empty-card">Nenhuma manutenção registrada.</div>'}</div>`;
 }
 function delMaint(id){
-  if (confirm('Excluir este registro do histórico?')) commit(st => { st.maintenance = st.maintenance.filter(x => x.id !== id); }, 'Registro excluído.');
+  const rec = allMaintenance().find(x => x.id === id);
+  if (!rec) { alert('Não foi possível localizar este lançamento. Atualize a tela e tente novamente.'); return; }
+  const vehicle = findV(rec.vehicle);
+  const details = `${vehicle?.prefix || rec.prefix || 'Viatura'} · ${rec.type || 'Manutenção'} · ${fmtDate(rec.date)} · KM ${kmfmt(rec.km)}`;
+  if (rec.source === 'Lançamento público' || rec.publicRecord === true) {
+    alert('Este lançamento foi enviado pelo formulário público. A exclusão precisa ser feita pelo sistema de origem/Worker; não é seguro removê-lo apenas da tela.');
+    return;
+  }
+  if (!confirm(`Excluir definitivamente este lançamento?\n\n${details}\n${rec.desc || ''}\n\nEsta ação não poderá ser desfeita.`)) return;
+  commit(st => { st.maintenance = st.maintenance.filter(x => x.id !== id); }, 'Lançamento de manutenção excluído.');
 }
 function backup(){
   const data = {app: 'Controle de Viaturas CPA-7', exportedAt: new Date().toISOString(), ...normalize(s)};
