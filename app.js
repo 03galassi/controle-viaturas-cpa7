@@ -507,6 +507,7 @@ function vehicleCards(arr){
     <div class="vc-oil">${chip(st)}${meterHtml(v, false)}<div class="meter-cap"><span>${kmfmt(driven)} km rodados</span><span>${v.oilDate ? 'Troca: ' + esc(fmtDate(v.oilDate)) : ''}</span></div></div>
     <div class="vc-actions">
      ${btn('secondary','kmForm','gauge','KM','Atualizar KM')}${btn('primary','oilForm','drop','Óleo','Troca de óleo')}${btn('orange','maintForm','wrench','Manut.','Manutenção')}
+     <button class="secondary history-btn" onclick="historyVehicle('${v.id}')" title="Ver histórico de manutenção" aria-label="Ver histórico de manutenção">${ic('clipboard')}<span>Histórico</span></button>
      <button class="edit-btn" onclick="vehicleForm('${v.id}')" aria-label="Editar viatura" title="Editar">${ic('edit')}</button>
     </div>
   </article>`;
@@ -670,9 +671,17 @@ function maintRow(m, canDelete){
   const oil = m.type === 'Troca de óleo';
   return `<div class="list-card maint-row"><div class="lc-main"><span class="avatar ${oil ? 'oil' : ''}">${ic(oil ? 'drop' : 'wrench')}</span><div><b>${esc(v?.prefix || m.prefix || 'Viatura removida')} · ${esc(m.type)}</b><span>${esc(fmtDate(m.date))} · KM ${kmfmt(m.km)}${v ? ' · ' + esc(v.unit) : ''}</span>${m.desc ? `<span>${esc(m.desc)}</span>` : ''}<small>${esc(m.source || '')}</small></div></div><div class="maint-side"><strong>${value}</strong>${canDelete && !isPublicRecord ? `<button class="danger-btn small" onclick="delMaint('${m.id}')">Excluir</button>` : ''}</div></div>`;
 }
+function historyVehicle(id){
+  const v = findV(id);
+  if (!v) return;
+  ui.maintVehicle = v.id;
+  ui.maintQuery = '';
+  go('maint');
+}
 function maint(){
   if (ui.maintVehicle && !findV(ui.maintVehicle)) ui.maintVehicle = '';
-  $('content').innerHTML = `<div class="page-head"><div><h1>Manutenções</h1><p>Registros de óleo e serviços da frota</p></div></div>
+  const selectedVehicle = ui.maintVehicle ? findV(ui.maintVehicle) : null;
+  $('content').innerHTML = `<div class="page-head"><div><h1>${selectedVehicle ? `Histórico de manutenção — ${esc(selectedVehicle.prefix)}` : 'Manutenções'}</h1><p>${selectedVehicle ? `${esc(selectedVehicle.brand || '')} ${esc(selectedVehicle.model || '')} · ${esc(selectedVehicle.plate || '')} · ${esc(selectedVehicle.unit || '')}` : 'Registros de óleo e serviços da frota'}</p></div>${selectedVehicle ? `<button class="secondary" onclick="ui.maintVehicle='';maint()">Ver todas as viaturas</button>` : ''}</div>
  <div class="toolbar"><input type="search" placeholder="Pesquisar tipo, descrição ou responsável..." value="${esc(ui.maintQuery)}" oninput="ui.maintQuery=this.value;maintList()"><select onchange="ui.maintVehicle=this.value;maint()"><option value="">Todas as viaturas</option>${sortV(s.vehicles).map(v => `<option value="${v.id}" ${v.id === ui.maintVehicle ? 'selected' : ''}>${esc(v.prefix)} — ${esc(v.unit)}</option>`).join('')}</select></div>
  <div id="maintList"></div>`;
   maintList();

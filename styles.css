@@ -146,6 +146,8 @@ button.stat:hover{border-color:#a8c8ee}
 .vc-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}
 .vc-actions button{padding:8px 11px;font-size:13px;white-space:nowrap;gap:6px}
 .vc-actions .edit-btn{padding:8px 10px}
+.vc-actions .history-btn{color:#0b57a4;font-weight:800;min-width:0}
+.vc-actions .history-btn span{display:inline!important;visibility:visible!important}
 .t-s{display:none}
 @media(min-width:1201px){.t-s{display:inline}.t-l{display:none}}
 
